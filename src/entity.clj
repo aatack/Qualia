@@ -22,20 +22,35 @@
   (dependencies [_] #{})
   (lookup? [_] true))
 
-(defrecord Lookup [root path]
+(defn database
+  "Wrap a value in a database, making it accessible to entity functions."
+  [value]
+  (->Database value))
+
+(defrecord Select [entity path]
   clojure.lang.IDeref
-  (deref [_] (get-in @root path))
+  (deref [_] (get-in @entity path))
 
   Entity
   (dependencies [this] (if (lookup? this)
-                         (set (map #(concat % path) (dependencies root)))
-                         (dependencies root)))
-  (lookup? [_] (lookup? root)))
+                         (set (map #(concat % path) (dependencies entity)))
+                         (dependencies entity)))
+  (lookup? [_] (lookup? entity)))
 
-(defrecord Derive [function arguments]
+(defn select
+  "An entity retrieving another value from a database and accesesing a path within it."
+  [entity & path]
+  (->Select entity path))
+
+(defrecord Compute [function arguments]
   clojure.lang.IDeref
   (deref [_] (apply function (map deref arguments)))
 
   Entity
   (dependencies [_] (apply set/intersection (map dependencies arguments)))
   (lookup? [_] false))
+
+(defn compute
+  "Compute a new value from a set of entities."
+  [function & arguments]
+  (->Compute function arguments))
