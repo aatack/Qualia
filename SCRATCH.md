@@ -1,0 +1,42 @@
+- A component is given a completely unregulated "workspace"
+- When some part of the global workspace changes, the component is asked to update its workspace
+- The function for doing this looks something like `(update [workspace context arguments paths-in paths-out] ...)`
+- This extremely general wrapper should allow you to write heavily optimised components if you really want to
+- Most typical components should - hopefully - become quite simple under this paradigm
+- We could impose some structure upon the returned workspace to standardise some common optimisations
+- For example, if the workspace always contains `:arguments`, `:state`, and `:consumed` forms, and there's no global state (only provided state), you know that you don't need to do any updates at all if:
+  - All arguments are the same
+  - All of your consumed paths, and those of your children, diverge from all of the updated paths
+    - Is this horrendously difficult to check, computationally?
+    - Because there'll probably be lots of nice branching behaviour, seems like it'd be pretty easy to check if we really wanted to find an optimised way of writing it (with some custom algorithm)
+  - Also, at each stage you can cull the dictionary of changed paths according to the dictionary of consumed paths, which makes future checks (further down the line) easier
+- The output of the update method should be a series of path-value pairs, which are used by the framework to update its state atom externally
+  - This also means that callers of child components can determine whether or not they need to update any of their keys, or whether they can just return the update as-is
+- Another nice thing is that the entire tree - including all globally- and locally-managed state - can be viewed as a single clojure object, with no extra bells or whistles
+- Finally, it would be easy to come up with some heuristic to work out when to "collapse" the tree of dependencies
+  - Eg. if a component is listening to the paths `[:state :text]`, `[:state :history :1]`, and `[:state :start]`, it might make sense to collapse that to just `[:state]` to reduce the complexity of checks
+  - If you wanted to impose a little more structure, you could say that you're going to represent paths with two components: the component path and the state path. Then you'd know that you don't ever need to consider any updates that have diverging component paths, since there's no way for a component to affect another that isn't in the same branch
+    - Though I don't like this as much because it's kind of cool that the state of a children of a component exist exclusively inside its workspace, and aren't in any way special; they're the same as any other state in the tree
+- Obviously you'd need a bunch of wrappers around all of this to make it usable anyway
+- Another cool thing is that you really can go all the way on the "events as state" train, even for impulse events like clicks and key presses
+  - You'd just make sure there's a "key press" path, and every time it gets an updated signal you assume its current value is the key pressed
+  - To save on rendering time, if multiple come through at once you could send down the events without a `:render` request in the `paths-out`, so highly-optimised components could even avoid rendering themselves until actually requested if they really wanted to
+  - One important convention for this to actually work: any values of `nil` in the returned mapping (paths out) must always be interpreted as "computed lazily; must be requested specifically to obtain a value"
+- [ ] A conundrum: if the mouse position is to be constantly in the state, and always updated, it mustn't trigger spurious updates whenever it moves
+  - This means that components need to be able to say whether they use the mouse status, to prevent common components like `translate` from having to continually update the mouse position when their children are uninterested in the mouse position
+  - Crucially, you need to know whether to compute the new translated mouse position before rendering any children (as you need to build the context); but you don't know whether or not the child is consuming the mouse position until after it's been rendered - and hence until after you've already computed the new position
+  - I'm sure you could probably come up with a contrived example where the child becomes dependent on the mouse position suddenly, as a result of a change in some other variable
+    - Actually I don't even think it would need to be all that contrived...
+  - [ ] Are lazy contexts the way to solve this?
+    - Importantly: while I suspect it's possible for a child component to start caring about whether the mouse position _will change_ spontaneously, I don't think it's possible for it to suddenly start caring about whether it _has changed_, since it didn't know what the previous value was in the first place
+- It's interesting to note that literally none of this is UI-specific - at least, not in its most general case
+  - Surely this is reinventing some wheel somewhere?
+  - I suppose what it really is is a way of laying out the classic observer architecture in a way that (sort of?) guarantees there are no loops
+- [ ] Another interesting unanswered question: is it important for this framework to be able to handle state-change-induced state changes?
+  - Example: a component is added. It then becomes focused straight away. If the focus is maintained at the top level, how does the _resolution_ of a change in state propagate through to then make its own change in the state?
+  - A naive solution would be to say that whichever change actually prompted the state change should also have set the focus, but this is shortsighted: it potentially had no way of knowing what the focus should be set to
+  - Then again, the beauty of having the whole tree at your disposal is that it might be possible to easily identify - and surgically manipulate - other parts of the tree, even though they're in entirely separate branches
+- Note that each value in the context needs to come with some indication of where it came from
+  - Ie. if a component depends on a value from the context, upon which path should it then depend?
+- [ ] Need to work out which problem this whole thing actually solves
+  - Ie. what are the guiding principles of this system?
