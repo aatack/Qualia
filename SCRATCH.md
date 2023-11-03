@@ -40,3 +40,36 @@
   - Ie. if a component depends on a value from the context, upon which path should it then depend?
 - [ ] Need to work out which problem this whole thing actually solves
   - Ie. what are the guiding principles of this system?
+- Thoughts on more concrete data representations:
+  - Paths should be represented as referenceable objects, which contain a path and the most up-to-date state object
+    - Each component could be passed its workspace as a path, which reduces the amount of information you need to pass to the update function in order to let the component know where it "lives"
+    - It also makes it easier to get the initial "pointer" to pass to any children - ie. you can just extend the pointer you've been given for your workspace
+    - ~~Something else here I've forgotten...~~ You can then return a bunch of these objects from the child when it's been run (or, better yet, store them as a member of the child's workspace) and join them all together to be sent up to the next level
+    - Possible name for these objects: "entities". This makes sense as they refer to a particular part of the state
+  - How about representing the context as a bundle of entities as well?
+    - I don't see why not
+    - It gets a bit more complicated in two scenarios I can think of:
+      - Derived context that isn't necessarily stored anywhere, like the updated bounds passed on by a translate component
+      - Global state that's stored in the context, and for which a more deeply nested part is then accessed
+    - Both of the above concerns can be solved by making entities a bit more like a traditional observable, but making them stateless; ie. instead of always just maintaining a path, they can be asked to return a set of dependent paths
+      - The above scenarios are solved as:
+        - Derived entities can simply refer to the original entities from which they were derived
+        - Global state, if stored in an entity, can simply have a cursor called on it (as any other ~~piece of state~~ entity would) to select only the part that's actually used as a dependency
+      - Ultimately I suppose these should have test cases that run for them
+- [ ] Should the default interface have `update` return a set of changed paths within the workspace?
+  - This might be useful for avoiding further recomputation in the parent if a particular object hasn't been altered
+  - On the other hand, it might be an enormous faff for not much gain at all
+  - ==> Let's not do it like that for now, and revisit later if optimisation proves that's actually a bottleneck
+- Thoughts on optimising the path intersection algorithm:
+  - The chances are that it doesn't need to be optimised for a while
+  - By far the most common operation will be taking two sets of entities - one representing changes and one dependencies - and working out whether they "overlap"
+    - In this context, overlapping means that they don't diverge. So, `[:a :b]` overlaps with both `[:a]` and `[:a :b :c]`, but not `[:a :c]`
+  - A set of paths can be reduced to a nested map; the leaves would just be any non-map object. So the set of paths `#{[:a :b]}` would be represented as `{:a {:b true}}`
+    - [ ] When reducing sets that have overlapping paths (`#{[:a :b :c] [:a :b]}`) I think it's fine to just take the longer one?  So this would reduce to `{:a {:b {:c true}}}`
+  - Comparing two nested maps then becomes a simple recursive operation:
+    - Find the intersection of their keys
+    - If the intersection is empty, there's no overlap
+    - For each joined key, compare the two corresponding values
+      - If either is `true`, there's an overlap
+      - Otherwise, you have two maps, and can apply the algorithm recursively again
+  - I think this algorithm would work and exit early most of the time? 
