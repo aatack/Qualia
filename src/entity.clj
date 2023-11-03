@@ -5,9 +5,9 @@
   (dependencies [this])
   (cursor? [this]))
 
-(defrecord State [state]
+(defrecord Database [value]
   clojure.lang.IDeref
-  (deref [_] state)
+  (deref [_] value)
 
   Entity
   (dependencies [_] #{})
