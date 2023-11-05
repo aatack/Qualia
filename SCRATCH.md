@@ -65,11 +65,42 @@
   - By far the most common operation will be taking two sets of entities - one representing changes and one dependencies - and working out whether they "overlap"
     - In this context, overlapping means that they don't diverge. So, `[:a :b]` overlaps with both `[:a]` and `[:a :b :c]`, but not `[:a :c]`
   - A set of paths can be reduced to a nested map; the leaves would just be any non-map object. So the set of paths `#{[:a :b]}` would be represented as `{:a {:b true}}`
-    - [ ] When reducing sets that have overlapping paths (`#{[:a :b :c] [:a :b]}`) I think it's fine to just take the longer one?  So this would reduce to `{:a {:b {:c true}}}`
+    - [ ] When reducing sets that have overlapping paths (`#{[:a :b :c] [:a :b]}`) I think it's fine to just take the longer one? So this would reduce to `{:a {:b {:c true}}}`
   - Comparing two nested maps then becomes a simple recursive operation:
     - Find the intersection of their keys
     - If the intersection is empty, there's no overlap
     - For each joined key, compare the two corresponding values
       - If either is `true`, there's an overlap
       - Otherwise, you have two maps, and can apply the algorithm recursively again
-  - I think this algorithm would work and exit early most of the time? 
+  - I think this algorithm would work and exit early most of the time?
+- Possible interface for higher-level (ie. unoptimised) components:
+
+  ```clojure
+  (defcomponent example
+    [a "Must be passed as an argument"
+     b (default 10) "Will default to `10` if not passed"
+     c (context :state :cache 1) "Derives its value from the component's context"
+     d (context :mouse) (default [0 0]) "Derived from the context, or just a default"]
+
+    bounds
+    (if-let [[mouse-x mouse-y] d]
+      [(* mouse-x 2) (* mouse-y 2)]
+      [100 100])
+
+    render
+    (rectangle bounds [0.2 0.6 0.7]))
+  ```
+
+  - Calling this component would look like `(example 1 :c 2)`
+  - The body of the component is specified as a bunch of key-value pairs, where each key maps to the form that will be evaluated to determine its result
+  - Only the requested results will be evaluated, meaning some components will be able to provide a quicker return if eg. only their bounds are requested, and not the render
+  - If there are an odd number of forms, the odd one out will have its results used instead of any that are not specified
+    - That way it's also allowed to simply call some of the lower-level components, but override one or two of the resulting values
+  - Each argument would get passed as an entity that can be referenced
+    - Technically some of them can also be set, though that should only really be happening in callbacks (ie. updating the state shouldn't really trigger more changes to the state)
+  - [ ] How will this deal with splatted arguments?
+    - One option: separate the passed arguments and context-derived arguments
+      - I don't like this as it would be incredibly powerful to be able to sometimes specify arguments and sometimes let the component handle them itself
+    - Another option: introduce some special notation for it
+      - This is difficult as then questions are raised about how to bind those values in the presence or absence of other optional arguments
+        - We do need to solve this problem anyway, though, so it might still be fine
