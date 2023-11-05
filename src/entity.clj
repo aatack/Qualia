@@ -43,6 +43,9 @@
   (->Select entity path))
 
 (defrecord Compute [function arguments]
+  ;; (TODO) Consider adding an optional inverse function, which can be used to set the
+  ;; underlying state where an inverse conversion is possible
+
   clojure.lang.IDeref
   (deref [_] (apply function (map deref arguments)))
 
