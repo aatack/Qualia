@@ -80,7 +80,8 @@
     [a "Must be passed as an argument"
      b (default 10) "Will default to `10` if not passed"
      c (context :state :cache 1) "Derives its value from the component's context"
-     d (context :mouse) (default [0 0]) "Derived from the context, or just a default"]
+     d (context :mouse) (default [0 0]) "Derived from the context, or just a default"
+     e (state (+ a c)) "Track value as locally managed state if not otherwise provided"]
 
     bounds
     (if-let [[mouse-x mouse-y] d]
