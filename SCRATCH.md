@@ -105,3 +105,5 @@
     - Another option: introduce some special notation for it
       - This is difficult as then questions are raised about how to bind those values in the presence or absence of other optional arguments
         - We do need to solve this problem anyway, though, so it might still be fine
+  - [ ] Is the setup here actually enough to just define all the lower-level components outright?
+- [ ] Which lower-level components do we need to make a system for building user interfaces?
