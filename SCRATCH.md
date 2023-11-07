@@ -106,4 +106,29 @@
       - This is difficult as then questions are raised about how to bind those values in the presence or absence of other optional arguments
         - We do need to solve this problem anyway, though, so it might still be fine
   - [ ] Is the setup here actually enough to just define all the lower-level components outright?
+
 - [ ] Which lower-level components do we need to make a system for building user interfaces?
+- Having thought about this a bit more, I reckon there is actually a concise and elegant solution for this kind of problem
+  - To rehash the problem: we would like to come up with some kind of data structure (an "entity") that can manage its value, as a piece of state, efficiently with respect to external changes to some part of it
+    - This is similar to a typical observer model, but adopts an extremely top-down approach
+    - Any data structure should be able to be an entity, probably by tagging it with some kind of metadata containing its handler
+  - Should entities need to respond to changes globally - in some outer entity - or only those within their scope?
+    - It's probably easier for everyone involved if we limit it to changes within the scope. Then the top-down approach works better as you don't need to assume some kind of global state; you need only know about things that have been passed to you explicitly
+  - So the interface should look something like this: an entity takes a set of internal, local, and global scopes, and transforms them into a new set of scopes
+    - The internal scope is the state maintained by the entity itself. This may be any collection, but is assumed to be a map, and may be tagged with a list of "paths" whose values have been deemed to change. This will come from some external source
+      - Note that **changes will not have been applied already**; these could probably be considered to be "requests" rather than "notifications" and, as such, should probably map to the new values
+    - The local scope is the set of arguments passed to the entity. It will typically be a vector of values
+      - I'm a little skeptical of the exact place the arguments hold in the whole system. I do think it's necessary, as we want to pass some values down without their necessarily being tracked by the state internally. We may also not want them to be passed down to children by default, which is the purpose of the global context/scope
+        - As a side note, it seems that a lot of problems actually resolve down to this issue of assumed context: see, for example, building up modules with assumed imports; or defining patterns that always assume they're operating on a single value. One to put more thought into...
+        - Semantically, arguments/local scope could also be justified as representing values which, if changed, don't automatically propagate down to children
+          - For example, a change in the theme (in the global scope) may affect children even if the immediately-called entity doesn't consume the theme itself
+      - Arguments will typically not be annotated with changed paths, though I suppose I don't see why that shouldn't be possible
+        - Perhaps, when looking at changed paths, we should consider a `nil` value to mean that everything has changed, and a rerun is necessary. Whereas an empty vector/map would mean that we have verified nothing has changed
+    - The global scope is a context containing values made available to the entity. The entity is notified of changes in the global scope, rather than having them requested; they have already been made and it must update its state accordingly
+      - This will typically be presented as a map, with metadata indicating a set of paths that have been updated
+        - Note that paths are defined as per `get-in`
+  - Note that the internal scope, local scope, and global scope could equally be referred to as the state, arguments, and context respectively
+  - The fairly general nature of entities means they can be easily composed and chained together, with one entity modifying the various scopes before passing them onto the next one
+    - Once they've all completed, it's probably only the state/internal scope that you're interested in
+      - This presents itself quite well to having lazy parameters, I think, as it could simply contain keys that map to functions instead of values
+  - For the sake of improved visibility it's probably best if, at least by convention, values are stored in the entity's state (albeit under scoped keys) rather than in the metadata
