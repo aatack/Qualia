@@ -180,3 +180,8 @@
     - With this method you could even have the handler at the top level: use a simple `q/on-change` wrapper, and if there are any values in the returned context's `::on-change` property, update the child entity again with those new paths in the list of changed dependencies
     - Problem is that then every other entity needs to know about this, so it can merge the side effects
 - This new system, where there's no global object and you just respond to whatever gets passed down through the context, is nice: it means the top-level caller can simply send in a context with eg. a new mouse position, or list of depressed keys
+- Now it's time to think about how all of this is going to be laid out in an implementation
+  - Perhaps good to contextualise this with an incredibly simple widget
+    - Consider, for example, a couple of coloured rectangles rendered one on top of the other.  Clicking one will set its colour to some random RGB value
+  - Probably fine to just start with a big list of entities, defined as records implementing a protocol
+    - No need to work out how to instantiate them easily just yet, as that will presumably ~~all~~ mostly be done by macros anyway
