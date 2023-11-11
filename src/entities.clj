@@ -1,4 +1,4 @@
-(ns entity)
+(ns entities)
 
 (defprotocol Entity
   (update [this context arguments workspace]))
