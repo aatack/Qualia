@@ -185,3 +185,12 @@
     - Consider, for example, a couple of coloured rectangles rendered one on top of the other.  Clicking one will set its colour to some random RGB value
   - Probably fine to just start with a big list of entities, defined as records implementing a protocol
     - No need to work out how to instantiate them easily just yet, as that will presumably ~~all~~ mostly be done by macros anyway
+  - First problem I've run into is this thing about whether the context dependencies need to be treated differently to the workspace dependencies
+    - I'm pretty sure they do, because the nature of how those things are passed is fundamentally different
+    - When "unrolling" the tree, after the application of an entity, the workspace dependencies need to have segments added to their paths.  Context dependencies don't; in fact, at some stage (eg. in `q/provide`) they may need to be converted from context dependencies to workspace dependencies
+    - How should this be handled?
+      - Have a `::dependencies` key, whose mapping contains a different set for each type of dependency (`:context`, `:arguments`, and `:workspace`)
+      - Each can be handled differently by whatever's calling it
+      - This also leaves room in the future for other types of dependencies.  For example, when implementing animations, it might make sense for there to be a `:time` dependency a la trickle
+- The more time I spend thinking about this, the more I feel it would just be so much easier in Parsle
+- Something else that's cool about this system is that, because you have complete control over when things get cached or not, you can only cache (guard?) certain subsections of an entity
