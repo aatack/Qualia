@@ -192,5 +192,9 @@
       - Have a `::dependencies` key, whose mapping contains a different set for each type of dependency (`:context`, `:arguments`, and `:workspace`)
       - Each can be handled differently by whatever's calling it
       - This also leaves room in the future for other types of dependencies.  For example, when implementing animations, it might make sense for there to be a `:time` dependency a la trickle
+  - An example of where this matters is in `q/consume`
+    - The resulting entity has had its workspace modified according to the content of the context; so if that part of the context changed, it will also have changed in the workspace now
+    - Likewise, if the child entity depends on that key in the workspace, this entity should now depend on the corresponding key in the workspace
+    - For these changes to take effect, entities need to have control over how their children are executed
 - The more time I spend thinking about this, the more I feel it would just be so much easier in Parsle
 - Something else that's cool about this system is that, because you have complete control over when things get cached or not, you can only cache (guard?) certain subsections of an entity
