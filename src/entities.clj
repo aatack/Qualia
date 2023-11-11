@@ -1,14 +1,14 @@
-(ns entities 
+(ns entities
   (:require [dependencies :refer [conj-dependency]]))
 
 (defprotocol Entity
-  (update [this context arguments workspace]))
+  (manage [this context arguments workspace]))
 
-(defrecord Consume [context-key workspace-key]
+(defrecord Consume [context-key workspace-key entity]
   Entity
-  (update [_ context arguments workspace]
-    [context arguments
-     (-> workspace
-         (assoc workspace-key
-                              (get context context-key))
-         (conj-dependency :context context-key))]))
+  (manage [_ context arguments workspace]
+    (manage entity context arguments
+            (-> workspace
+                (assoc workspace-key
+                       (get context context-key))
+                (conj-dependency :context context-key)))))
