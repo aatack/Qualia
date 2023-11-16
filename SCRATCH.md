@@ -288,6 +288,12 @@
     - Still need to work out how keys will work here. Calls could be stored as properties, eg. `(q/property key (q/call custom-component (q/lookup :name)))`
     - Should also be able to take a `:check #{paths}` value, in which case it will check the resulting value before storing it in the current state. If any of the checked paths have changed, they will be added to the list of changes being passed forward
       - As such I think this one will need to take a child to call afterwards
+        - I suppose a convention could be made of having an optional child which, if `nil`, is not called; the results are returned directly
+          - Important because I'm pretty sure I could think up reasonable uses of the `call` entity for both cases
+            - Eg. it's definitely valid to want to use this as a kind of `let`, but where the call producing the bindings is an entity itself
+              - Perhaps in that case what we really need is a custom `q/let` entity
+                - ~~Having said that, if the child returns its state anyway then what's this really used for?~~ Checking whether or not values have changed. In that case, perhaps `watch-call` would be a better name
+            - It's also valid to want to just call a child and return the value, eg. for storing in a property
   - [ ] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
