@@ -208,3 +208,42 @@
   - Just define an entity as some function which, given a set of local arguments and global context, returns some value along with a list/set of dependencies
 - What should the interface look like?
   - `(q/map [a (q/state 0) b (q/state 0) c (+ @a @b)])`
+- After further consideration, it makes sense to bundle all the different bits of state together
+
+  - When called, a component/entity gets a single object, containing: under `:context`, a map of values passed down to it from potentially much further up the call stack; under `:arguments`, a vector (typically) of values pertaining exclusively to it; under `:scope`, a workspace containing values that will not be persisted beyond this run; and under `:state`, the previous value returned from this entity (which will always be `nil` if it has not yet been called)
+
+    - It will also receive, alongside this object, a set of paths within that object that have changed since the last time it was called
+      - If it's being called for the first time, that set may well be `#{[]}` - ie. everything has changed
+      - Note that changes to the internal state will already have been applied to it; it's now simply being asked to respond to them if necessary
+    - A key thing to understand is that there's a distinction between what I'm calling, for lack of a better term, "static" and "dynamic" arguments
+
+      - Static arguments are always fixed, and are sort of compile-time constants. They should be built into the entity definition. These might include things like the name of the variable being consumed from the context
+      - Dynamic arguments are ones that might update each time the entity is called, and are hence stored in the inputs and have the ability to change. A better - more react-like - name for these might be "props". These are supplied via direct passing to a `q/child` form
+
+        - This closes off a big hole in my understanding up until now. These are genuinely two different concepts, each useful in its own right. It's also important to note that this means that calls to `q/child` are a meaningful delineation between different parts of the object
+
+          - But this does make sense, as it's often necessary for eg. the scope to be shared among multiple calls, even though it's supposedly "local"
+
+            - The key insight here is that it's local to the _component_, but not necessarily local to the _entity_
+            - For example, to achieve something like `(defcomponent text [colour (context primary-colour) (state [0 0 0])] ,,,)`, the `context` and `state` forms might conceivably both need to access the same scope
+
+              - (As a side point, each argument in that form should start with an implicit `(argument index)`)
+
+                - The full form, when formatted, might look something like:
+
+                  ```clojure
+                  (q/defcomponent text-field
+                    [text (state "")
+                     colour (context :text-colour)
+                            (state [0 0 0])
+                     selection (state {:start 0 :end 0})
+                     history (state [])]
+                    (q/stack (q/paragraph text)
+                             ,,,))
+                  ```
+
+- Two values should then be returned
+  - The first is simply the new state value of the entity/component
+  - The second is a set of dependencies which, if any of them change, this entity would like to be informed of
+  - The entity does not need to return a list of values that have changed. This is because the caller knows if it needs to check whether any of the resulting values have changed, and has both the old and new values at this point; so it can perform the check itself
+    - Performing that check will also be pretty cheap in clojure
