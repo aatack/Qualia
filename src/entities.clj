@@ -8,7 +8,9 @@
   Entity
   (manage [_ context arguments workspace]
     ;; (TODO) Transfer input dependencies and define output dependencies conditionally
-    (manage entity context arguments
+    (manage entity
+            context
+            arguments
             (-> workspace
                 (assoc workspace-key
                        (get context context-key))

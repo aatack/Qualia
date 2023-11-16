@@ -153,8 +153,8 @@
       - The current workspace will be obtained from the map of children, or passed as an empty map if the child does not exist yet
       - Note that this implies that `entity` contains both a handler and set of arguments, which will be a common pattern and should be handled at the library level
     - It's possible for the key to be generated automatically
-      - For this to happen, any calls to `q/child` should be wrapped in `q/children`.  This will set up a `[::children ::key]` property, which is initially `0`, and is accessed by `q/child` and incremented as it goes along
-      - It (`q/children`) can also, before updating its wrapped entity, take note of the children that currently exist.  Then, after updating has completed, any children that didn't get updates in that round can be pruned
+      - For this to happen, any calls to `q/child` should be wrapped in `q/children`. This will set up a `[::children ::key]` property, which is initially `0`, and is accessed by `q/child` and incremented as it goes along
+      - It (`q/children`) can also, before updating its wrapped entity, take note of the children that currently exist. Then, after updating has completed, any children that didn't get updates in that round can be pruned
   - [ ] `(q/get child? [path])`
     - Returns the current value of the path of the current entity
     - Could this be made to work on child entities, if it's given one as an argument?
@@ -176,25 +176,35 @@
 - [ ] If we want to handle mouse actions by simply passing in a change to the context, for example, it will actually be necessary to be able to raise events from inside the entity
   - This raises a much more fundamental question: how are side effects propagated back up the tree?
   - Simplest possible way: use the returned context as a sort of accumulator
-    - This *feels* a bit off but I can't see any actual problems with it
+    - This _feels_ a bit off but I can't see any actual problems with it
     - With this method you could even have the handler at the top level: use a simple `q/on-change` wrapper, and if there are any values in the returned context's `::on-change` property, update the child entity again with those new paths in the list of changed dependencies
     - Problem is that then every other entity needs to know about this, so it can merge the side effects
 - This new system, where there's no global object and you just respond to whatever gets passed down through the context, is nice: it means the top-level caller can simply send in a context with eg. a new mouse position, or list of depressed keys
 - Now it's time to think about how all of this is going to be laid out in an implementation
   - Perhaps good to contextualise this with an incredibly simple widget
-    - Consider, for example, a couple of coloured rectangles rendered one on top of the other.  Clicking one will set its colour to some random RGB value
+    - Consider, for example, a couple of coloured rectangles rendered one on top of the other. Clicking one will set its colour to some random RGB value
   - Probably fine to just start with a big list of entities, defined as records implementing a protocol
     - No need to work out how to instantiate them easily just yet, as that will presumably ~~all~~ mostly be done by macros anyway
   - First problem I've run into is this thing about whether the context dependencies need to be treated differently to the workspace dependencies
     - I'm pretty sure they do, because the nature of how those things are passed is fundamentally different
-    - When "unrolling" the tree, after the application of an entity, the workspace dependencies need to have segments added to their paths.  Context dependencies don't; in fact, at some stage (eg. in `q/provide`) they may need to be converted from context dependencies to workspace dependencies
+    - When "unrolling" the tree, after the application of an entity, the workspace dependencies need to have segments added to their paths. Context dependencies don't; in fact, at some stage (eg. in `q/provide`) they may need to be converted from context dependencies to workspace dependencies
     - How should this be handled?
       - Have a `::dependencies` key, whose mapping contains a different set for each type of dependency (`:context`, `:arguments`, and `:workspace`)
       - Each can be handled differently by whatever's calling it
-      - This also leaves room in the future for other types of dependencies.  For example, when implementing animations, it might make sense for there to be a `:time` dependency a la trickle
+      - This also leaves room in the future for other types of dependencies. For example, when implementing animations, it might make sense for there to be a `:time` dependency a la trickle
   - An example of where this matters is in `q/consume`
     - The resulting entity has had its workspace modified according to the content of the context; so if that part of the context changed, it will also have changed in the workspace now
     - Likewise, if the child entity depends on that key in the workspace, this entity should now depend on the corresponding key in the workspace
     - For these changes to take effect, entities need to have control over how their children are executed
 - The more time I spend thinking about this, the more I feel it would just be so much easier in Parsle
 - Something else that's cool about this system is that, because you have complete control over when things get cached or not, you can only cache (guard?) certain subsections of an entity
+- Perhaps time to think about this from a slightly different angle again
+  - We ultimately want to have a nested data structure within which certain rules always hold. For example, the data structure could be `{:a 1 :b 2 :c 3}`, where `c` is always the sum of `a` and `b`
+    - The data structure has some metadata that describes how it should be updated when changes happen. It is notified of changes by some map, mapping paths within it to their new value. It must then apply those changes, and any resulting changes, and return the new object
+    - How might this example be represented? Could be something like `{:a (state) :b (state) :c (derived sum :a :b)}`
+      - This object should know that it needs to listen for changes to the paths `[:a]` and `[:b]`
+- I do think that kind of thought experiment is a good place to start
+  - Especially since it's devoid of any kind of UI context
+  - Just define an entity as some function which, given a set of local arguments and global context, returns some value along with a list/set of dependencies
+- What should the interface look like?
+  - `(q/map [a (q/state 0) b (q/state 0) c (+ @a @b)])`
