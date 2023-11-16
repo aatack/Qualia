@@ -250,6 +250,9 @@
 - With all of the above in mind, what are the most basic entities needed to start building up more complex components?
   - [ ] `cache`
     - Could also be called `guard`
+      - These may actually be slightly different things. Caching would prevent a component from being rerun if none if its dependencies have changed, whereas guarding would watch a value and remove it from the list of changed values if - even though its source has said it may have changed - its actual value is the same
+        - This would be useful when eg. translating a mouse position that actually is required, but it can be stored as `nil` when it's outside a component and so doesn't actually change in the majority of cases
+        - Likewise it may be useful after deriving a boolean from a complex value or something like that
     - Stores the returned dependencies of its child (perhaps as metadata?), and only executes the child again if any of the dependencies have changed
     - This one is particularly important because it frees up other entities to not worry so much about changes when they don't need to
       - The idea is you can just wrap your entire eg. component in a cache, and then other entities inside its implementation don't need to worry about checking whether or not they should execute. They just do the work
