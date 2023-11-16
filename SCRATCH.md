@@ -247,3 +247,65 @@
   - The second is a set of dependencies which, if any of them change, this entity would like to be informed of
   - The entity does not need to return a list of values that have changed. This is because the caller knows if it needs to check whether any of the resulting values have changed, and has both the old and new values at this point; so it can perform the check itself
     - Performing that check will also be pretty cheap in clojure
+- With all of the above in mind, what are the most basic entities needed to start building up more complex components?
+  - [ ] `cache`
+    - Could also be called `guard`
+    - Stores the returned dependencies of its child (perhaps as metadata?), and only executes the child again if any of the dependencies have changed
+    - This one is particularly important because it frees up other entities to not worry so much about changes when they don't need to
+      - The idea is you can just wrap your entire eg. component in a cache, and then other entities inside its implementation don't need to worry about checking whether or not they should execute. They just do the work
+        - For example, `property` calls don't need to check whether their dependencies have changed. The
+        - Specifically, dependencies only need to be _registered_ instead of being _propagated_. Only a small number of entities - like `provide` - will need to actually propagate/transform their dependencies
+  - [ ] `context`
+    - Grabs a value from a particular path in the context, and returns it along with the required dependency
+  - [ ] `provide`
+    - Copies a value - which could be determined from some passed entity - into the context. Then calls a child entity
+    - [ ] What should it list its dependencies as?
+    - [ ] How should it determine whether or not its value has changed?
+    - [ ] How can we escape doing work if its value isn't required by any children?
+      - Prime example here is having a `translate` UI component that transforms the mouse positions; but should avoid doing that work if not strictly necessary
+      - Doesn't need to actually provide the value if, on the last render, the child didn't depend on it
+        - I don't think it should be possible (?) for a child to suddenly require an entirely new property without having checked it before
+          - Actually I can think of a few nasty edge cases. Perhaps best to come back to this one later
+        - Would lazy providers do the trick?
+        - In fact, _given that the provider is being called_ it makes sense to just compute the new value and send it forward. If it's being called, it's because the child needed it somehow. If the child doesn't need it, after the first render, the child won't list that as a dependency; then this doesn't need to return any dependencies and the whole thing won't be re-rendered next time
+          - But _if it does get rendered_ it should compute and send the value
+          - Again, a robust test case is needed to check whether this intuition holds
+  - [ ] `derived`
+    - Simply computes a function of the current scope
+    - Depends on the entire scope; more specific caching behaviours can be implemented if required
+  - [ ] `state`
+    - Similar to `property` but only sets the value on the internal if it's not already defined
+      - Whatever the source of the value, the value itself is returned
+    - This doesn't need to listen to itself to manually update the value; that should be done externally (I think?)
+      - Though a valid question is that of how it's going to pass down a swappable value
+        - Perhaps this is one for the `defcomponent` macro
+  - [ ] `children`
+    - Could also be called `manage-children`, `cull`, or something like that
+    - Not yet entirely sure what the purpose would be, but it feels intuitively as though something like this will be required
+  - [ ] `child`
+    - Could also be named `call` or `delegate`
+    - Call another entity, providing it with a new scope, arguments, and potentially new state as well
+    - Still need to work out how keys will work here. Calls could be stored as properties, eg. `(q/property key (q/call custom-component (q/lookup :name)))`
+    - Should also be able to take a `:check #{paths}` value, in which case it will check the resulting value before storing it in the current state. If any of the checked paths have changed, they will be added to the list of changes being passed forward
+      - As such I think this one will need to take a child to call afterwards
+  - [ ] `property`
+    - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
+      - I suppose in theory the key could also be dynamically computed by an entity
+        - This applies to a lot of things, really
+  - [ ] `lazy-property`
+    - Include a `:cache` flag for expensive calls that may be called multiple times
+      - Though this shouldn't really be necessary, as that'll be handled by the caller...
+    - How will this actually be handled by the caller? How does it know whether it's getting a lazy property or just a normal one?
+  - [ ] `lookup`
+    - Returns a value from the scope
+    - Although this is technically a subset of `derived`, it's also so commonly used that storing an anonymous function in `lookup` to accomplish this might not be worth it
+      - Then again, keywords do act as functions...
+      - If it's decided that we don't need both, I actually think "lookup" is a better name than "derive"
+  - [ ] `argument`
+    - Similar to `context`, but for the arguments list
+    - Takes an integer or keyword, and grabs the corresponding one
+      - I suppose technically it could just as easily do nested lookups too
+  - [ ] `chain`
+    - Similar to the threading macro, but is context-aware (ie. will pass down the context/arguments/state/scope as it goes)
+  - To start implementing the system, it should be sufficient to just start naively working through these, approximately in order
+  - I also think a better name than "entity" is required - doesn't really descibe what these do very well any more
