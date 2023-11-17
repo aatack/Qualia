@@ -297,6 +297,9 @@
               - Perhaps in that case what we really need is a custom `q/let` entity
                 - ~~Having said that, if the child returns its state anyway then what's this really used for?~~ Checking whether or not values have changed. In that case, perhaps `watch-call` would be a better name
             - It's also valid to want to just call a child and return the value, eg. for storing in a property
+    - [ ] Could this manage the arguments as well?
+      - For example, if `defcomponent` were defined as wrapping something in a child, perhaps `child` could also do the work of just dumping the arguments directly into the scope - which is exactly what would be done anyway
+      - It's not the end of the world if it couldn't; it'd just make everything a bit simpler if we could get rid of the arguments altogether
   - [ ] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
