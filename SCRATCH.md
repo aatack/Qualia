@@ -313,6 +313,9 @@
     - Although this is technically a subset of `derived`, it's also so commonly used that storing an anonymous function in `lookup` to accomplish this might not be worth it
       - Then again, keywords do act as functions...
       - If it's decided that we don't need both, I actually think "lookup" is a better name than "derive"
+      - Difference between this and `derived` is that, because it accesses a specific value, it would be able to add that value as a dependency
+        - In this sense it has a significant overlap with `consume`
+        - It's also distinguished from `derived` in the sense that that form would only pass in the workspace, as opposed to the whole scope; so it sort of forces you to unpack the values yourself via other forms; hence adding the dependencies automatically
   - [ ] `argument`
     - Similar to `context`, but for the arguments list
     - Takes an integer or keyword, and grabs the corresponding one
