@@ -319,5 +319,11 @@
       - I suppose technically it could just as easily do nested lookups too
   - [ ] `chain`
     - Similar to the threading macro, but is context-aware (ie. will pass down the context/arguments/state/scope as it goes)
+  - [ ] `consume`
+    - Take and return a value from a particular path in the scope
+    - Also include that path in the list of dependencies
+    - Perhaps include a flag that determines whether the value should be dropped from the context?
+      - I don't think this would be useful; would be difficult to get it working reliably with a path instead of a single key anyway
+    - [ ] How is this any different from looking up a value from any other part of the passed scope?
   - To start implementing the system, it should be sufficient to just start naively working through these, approximately in order
   - I also think a better name than "entity" is required - doesn't really descibe what these do very well any more
