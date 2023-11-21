@@ -43,3 +43,10 @@
                   (merge-changes (:changes managed-observer)
                                  (:changes managed-property))
                   (:changes managed-observer))})))
+
+(defrecord Cache [observer]
+  Observer
+  (manage [_ scope changes]
+    (let [managed-observer (manage observer scope changes)]
+      {:value managed-observer
+       :changes (:changes managed-observer)})))
