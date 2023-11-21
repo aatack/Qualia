@@ -1,13 +1,11 @@
-(ns entities
+(ns observers
   (:require [dependencies :refer [conj-dependency]]))
 
-(defprotocol Entity
+(defprotocol Observer
   (manage [this scope changes]))
 
 (defrecord Lookup [path]
-  Entity
+  Observer
   (manage [_ scope _]
     {:value (get-in scope path)
      :dependencies (conj-dependency nil path)}))
-
-(defrecord Child [key definition bindings])

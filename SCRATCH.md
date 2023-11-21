@@ -330,3 +330,4 @@
     - [ ] How is this any different from looking up a value from any other part of the passed scope?
   - To start implementing the system, it should be sufficient to just start naively working through these, approximately in order
   - I also think a better name than "entity" is required - doesn't really descibe what these do very well any more
+    - [x] Perhaps "observer" is fine; it's a fairly well-understood concept and, although the implementation here is slightly different to the typical one, it's still doing more or less the same thing
