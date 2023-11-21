@@ -4,9 +4,10 @@
 (defprotocol Entity
   (manage [this scope changes]))
 
-(defrecord Consume [context-key workspace-key entity]
+(defrecord Lookup [path]
   Entity
-  (manage [_ scope changes]
-    (throw (Exception. "Not implemented"))))
+  (manage [_ scope _]
+    {:value (get-in scope path)
+     :dependencies (conj-dependency nil path)}))
 
 (defrecord Child [key definition bindings])
