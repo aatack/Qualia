@@ -273,10 +273,11 @@
         - In fact, _given that the provider is being called_ it makes sense to just compute the new value and send it forward. If it's being called, it's because the child needed it somehow. If the child doesn't need it, after the first render, the child won't list that as a dependency; then this doesn't need to return any dependencies and the whole thing won't be re-rendered next time
           - But _if it does get rendered_ it should compute and send the value
           - Again, a robust test case is needed to check whether this intuition holds
-  - [ ] `derived`
+  - [x] `derived`
     - Simply computes a function of the current scope
     - Depends on the entire scope; more specific caching behaviours can be implemented if required
-  - [ ] `state`
+    - Doesn't need to call any child observers, since it's not storing the value anywhere - just computing and returning it
+  - [x] `state`
     - Similar to `property` but only sets the value on the internal if it's not already defined
       - Whatever the source of the value, the value itself is returned
     - This doesn't need to listen to itself to manually update the value; that should be done externally (I think?)
@@ -297,6 +298,7 @@
           - An alternative would be for state to call its own child observer, but I don't think that's going to be useful to anyone
             - This might be necessary, in fact, because it needs to pass the modified scope forward to be used by another observer. This isn't possible if it simply returns the value directly (the caller wouldn't know that the returned value needs to be used to override the scope's `:state`, so this wouldn't actually be managing the state at all)
             - Final (I think) conclusion: this doesn't need to add any dependencies. If the state has changed, it will already be included in the changes passed into this. If it's being built for the first time, the child observer will end up being called with a `nil` state anyway
+    - Perhaps call this `persist` instead of `state`, to solidify a verb-y naming convention
   - [ ] `children`
     - Could also be called `manage-children`, `cull`, or something like that
     - Not yet entirely sure what the purpose would be, but it feels intuitively as though something like this will be required
