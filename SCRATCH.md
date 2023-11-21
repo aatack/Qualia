@@ -262,6 +262,10 @@
       - In fact it would just be the exact same format as the returned value
       - It's a bit difficult that this needs to use the `:state` since it's not really given its own thing - how do we know that it's going to be passed the correct internal state by the caller?
         - Ultimately I suppose we don't - just need to trust the other observers to be defined properly
+      - In practice it may have to be done with metadata as it's not necessarily reasonable to expect every caller to know whether or not they need to unpack the value to obtain eg. a render object
+        - Another way of doing this would be to just add a key to the returned value
+          - To prevent conflicts this could be overridden
+        - Either way, a wrapped value isn't good enough as it goes against the notion of a referentially transparent cache; you shouldn't need to know whether or not the observer you're calling is being cached to use it
   - [x] `context`
     - Grabs a value from a particular path in the context, and returns it along with the required dependency
     - For the low-level observers, this has been merged into `Lookup`

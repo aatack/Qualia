@@ -47,6 +47,9 @@
 (defrecord Cache [observer]
   Observer
   (manage [_ scope changes]
-    (let [managed-observer (manage observer scope changes)]
-      {:value managed-observer
-       :changes (:changes managed-observer)})))
+    (let [rerun (or (nil? (:state scope))
+                    (relevant-changes (-> scope :state :changes) changes))
+          managed-observer (manage observer scope changes)]
+      (if rerun (let [] {:value managed-observer
+                         :changes (:changes managed-observer)})
+          (-> scope :state :value)))))
