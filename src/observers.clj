@@ -1,5 +1,5 @@
 (ns observers
-  (:require [dependencies :refer [conj-dependency]]))
+  (:require [dependencies :refer [concat-dependencies conj-dependency]]))
 
 (defprotocol Observer
   (manage [this scope changes]))
@@ -23,3 +23,11 @@
   (manage [_ scope _]
     {:value (function (:workspace scope))
      :dependencies (conj-dependency nil [:workspace])}))
+
+(defrecord Export [path property observer]
+  Observer
+  (manage [_ scope changes]
+    (let [{:keys [value dependencies]} (manage property scope changes)]
+      (manage observer
+              (assoc-in scope (apply vector :state path) value)
+              (concat-dependencies changes dependencies)))))

@@ -322,6 +322,7 @@
       - I suppose in theory the key could also be dynamically computed by an entity
         - This applies to a lot of things, really
     - Also adds the dependencies of that entity to the returned dependencies
+    - For the verb-based naming scheme, this could instead be called `export`
   - [ ] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
