@@ -258,13 +258,18 @@
       - The idea is you can just wrap your entire eg. component in a cache, and then other entities inside its implementation don't need to worry about checking whether or not they should execute. They just do the work
         - For example, `property` calls don't need to check whether their dependencies have changed. The
         - Specifically, dependencies only need to be _registered_ instead of being _propagated_. Only a small number of entities - like `provide` - will need to actually propagate/transform their dependencies
-  - [ ] `context`
+    - This does mean that the resulting value would be returned wrapped in some kind of map containing dependencies and value
+      - In fact it would just be the exact same format as the returned value
+      - It's a bit difficult that this needs to use the `:state` since it's not really given its own thing - how do we know that it's going to be passed the correct internal state by the caller?
+        - Ultimately I suppose we don't - just need to trust the other observers to be defined properly
+  - [x] `context`
     - Grabs a value from a particular path in the context, and returns it along with the required dependency
-  - [ ] `provide`
+    - For the low-level observers, this has been merged into `Lookup`
+  - [x] `provide`
     - Copies a value - which could be determined from some passed entity - into the context. Then calls a child entity
-    - [ ] What should it list its dependencies as?
-    - [ ] How should it determine whether or not its value has changed?
-    - [ ] How can we escape doing work if its value isn't required by any children?
+    - [x] What should it list its dependencies as?
+    - [x] How should it determine whether or not its value has changed?
+    - [x] How can we escape doing work if its value isn't required by any children?
       - Prime example here is having a `translate` UI component that transforms the mouse positions; but should avoid doing that work if not strictly necessary
       - Doesn't need to actually provide the value if, on the last render, the child didn't depend on it
         - I don't think it should be possible (?) for a child to suddenly require an entirely new property without having checked it before
@@ -273,6 +278,7 @@
         - In fact, _given that the provider is being called_ it makes sense to just compute the new value and send it forward. If it's being called, it's because the child needed it somehow. If the child doesn't need it, after the first render, the child won't list that as a dependency; then this doesn't need to return any dependencies and the whole thing won't be re-rendered next time
           - But _if it does get rendered_ it should compute and send the value
           - Again, a robust test case is needed to check whether this intuition holds
+    - For the low-level observers, this has been merged into `Write`
   - [x] `derived`
     - Simply computes a function of the current scope
     - Depends on the entire scope; more specific caching behaviours can be implemented if required
