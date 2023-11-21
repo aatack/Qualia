@@ -308,12 +308,12 @@
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
     - How will this actually be handled by the caller? How does it know whether it's getting a lazy property or just a normal one?
-  - [ ] `lookup`
+  - [x] `lookup`
     - Returns a value from the scope
     - Although this is technically a subset of `derived`, it's also so commonly used that storing an anonymous function in `lookup` to accomplish this might not be worth it
       - Then again, keywords do act as functions...
       - If it's decided that we don't need both, I actually think "lookup" is a better name than "derive"
-      - Difference between this and `derived` is that, because it accesses a specific value, it would be able to add that value as a dependency
+      - Difference between this and `derived` is that, because it accesses a specific value, _it would be able to add that value as a dependency_
         - In this sense it has a significant overlap with `consume`
         - It's also distinguished from `derived` in the sense that that form would only pass in the workspace, as opposed to the whole scope; so it sort of forces you to unpack the values yourself via other forms; hence adding the dependencies automatically
   - [ ] `argument`
@@ -322,12 +322,13 @@
       - I suppose technically it could just as easily do nested lookups too
   - [ ] `chain`
     - Similar to the threading macro, but is context-aware (ie. will pass down the context/arguments/state/scope as it goes)
-  - [ ] `consume`
+  - [x] `consume`
     - Take and return a value from a particular path in the scope
     - Also include that path in the list of dependencies
     - Perhaps include a flag that determines whether the value should be dropped from the context?
       - I don't think this would be useful; would be difficult to get it working reliably with a path instead of a single key anyway
-    - [ ] How is this any different from looking up a value from any other part of the passed scope?
+    - [x] How is this any different from looking up a value from any other part of the passed scope?
+      - It's not, really; we can
   - To start implementing the system, it should be sufficient to just start naively working through these, approximately in order
   - I also think a better name than "entity" is required - doesn't really descibe what these do very well any more
     - [x] Perhaps "observer" is fine; it's a fairly well-understood concept and, although the implementation here is slightly different to the typical one, it's still doing more or less the same thing
