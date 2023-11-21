@@ -369,7 +369,7 @@
   - Operations I can think of off the top of my head, which will need to be implemented:
     - [x] Convert a path - as a vector - into the internal representation
       - Decided to force this to take a sequence instead of putting it into a variable number of arguments, as I can imagine we'll end up passing paths around quite a lot and calling `apply` all the time might get old quickly
-    - [ ] Add a new path into a map of changes
+    - [x] Add a new path into a map of changes
       - Actually in the current representation there's no real distinction between a single change and a list of changes - so a better name for this would perhaps be a merge
       - There are a couple of base cases here:
         - If one of the changes is the empty map, return it (since the empty map means everything's changed, it already includes all the values of the other)
@@ -378,7 +378,7 @@
         - This is where the whole "`nil` implies nothing" change really comes into its own: you can use a simple lookup across each one and it'll all work the same, all the way down
           - I'm actually really pleased with this, it's rather elegant. Treating `nil` as empty also means that, upon checking an intersection, you can treat the output as a boolean straight away without first checking whether or not it's empty
       - Implemented and seems to be working well
-    - [ ] Find the intersection of two change sets
+    - [x] Find the intersection of two change sets
       - I'm pretty sure this is a symmetrical operation? Not sure though
       - What's actually meant by this in the real world?
         - I have a set of realised changes, and a set of depended changes. I then want to know whether any of the depended changes have actually changed
@@ -389,3 +389,4 @@
           - Other than that, seems it works quite well. I think in the end it ended up being _not_ symmetrical
       - Perhaps it's better to call this something like `changed?`
         - That makes it sound like it's returning a boolean, though, which we don't necessarily want
+        - Hence a better name is `relevant-changes`

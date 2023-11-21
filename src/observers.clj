@@ -1,5 +1,5 @@
 (ns observers
-  (:require [dependencies :refer [concat-dependencies conj-dependency]]))
+  (:require [changes :refer [as-changes merge-changes relevant-changes]]))
 
 (defprotocol Observer
   (manage [this scope changes]))
@@ -8,7 +8,7 @@
   Observer
   (manage [_ scope _]
     {:value (get-in scope path)
-     :dependencies (conj-dependency nil path)}))
+     :changes (as-changes path)}))
 
 (defrecord Persist [path default observer]
   Observer
@@ -22,12 +22,24 @@
   Observer
   (manage [_ scope _]
     {:value (function (:workspace scope))
-     :dependencies (conj-dependency nil [:workspace])}))
+     :changes (as-changes [:workspace])}))
 
-(defrecord Export [path property observer]
+(defrecord Write [path property observer]
   Observer
   (manage [_ scope changes]
-    (let [{:keys [value dependencies]} (manage property scope changes)]
-      (manage observer
-              (assoc-in scope (apply vector :state path) value)
-              (concat-dependencies changes dependencies)))))
+    (let [path-changes (as-changes path)
+          managed-property (manage property scope changes)
+
+          managed-observer
+          (manage observer
+                  (assoc-in scope (apply vector :state path) (:value managed-property))
+                  (merge-changes changes
+                                 (when (relevant-changes (:changes managed-property)
+                                                         changes)
+                                   (path-changes))))]
+      {:value (:value managed-observer)
+       :changes (if (relevant-changes (:changes managed-property)
+                                      (:changes managed-observer))
+                  (merge-changes (:changes managed-observer)
+                                 (:changes managed-property))
+                  (:changes managed-observer))})))
