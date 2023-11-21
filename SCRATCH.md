@@ -371,5 +371,12 @@
       - Decided to force this to take a sequence instead of putting it into a variable number of arguments, as I can imagine we'll end up passing paths around quite a lot and calling `apply` all the time might get old quickly
     - [ ] Add a new path into a map of changes
       - Actually in the current representation there's no real distinction between a single change and a list of changes - so a better name for this would perhaps be a merge
+      - There are a couple of base cases here:
+        - If one of the changes is the empty map, return it (since the empty map means everything's changed, it already includes all the values of the other)
+        - If one is `nil`, return the other one
+      - Otherwise, we want to go through all the keys that appear in either mapping, and apply the operation recursively
+        - This is where the whole "`nil` implies nothing" change really comes into its own: you can use a simple lookup across each one and it'll all work the same, all the way down
+          - I'm actually really pleased with this, it's rather elegant. Treating `nil` as empty also means that, upon checking an intersection, you can treat the output as a boolean straight away without first checking whether or not it's empty
+      - Implemented and seems to be working well
     - [ ] Find the intersection of two change sets
       - I'm pretty sure this is a symmetrical operation? Not sure though
