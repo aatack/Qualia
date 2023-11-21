@@ -1,12 +1,12 @@
 (ns changes)
 
-(defn ->changes
+(defn as-changes
   "Convert a vector path into a mapping representing a change set."
   [path]
   (cond
     (nil? path) nil
     (empty? path) {}
-    :else {(first path) (->changes (rest path))}))
+    :else {(first path) (as-changes (rest path))}))
 
 (defn merge-changes
   "Merge two sets of changes together."
