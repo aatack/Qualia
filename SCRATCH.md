@@ -354,3 +354,22 @@
   - To start implementing the system, it should be sufficient to just start naively working through these, approximately in order
   - I also think a better name than "entity" is required - doesn't really descibe what these do very well any more
     - [x] Perhaps "observer" is fine; it's a fairly well-understood concept and, although the implementation here is slightly different to the typical one, it's still doing more or less the same thing
+- Time to think a bit more about the common operations on dependencies/changes, and how they're going to be represented
+  - Perhaps it'd be better to call them changes only - and get rid of dependencies as a concept - since a joint name for the two of them will be needed
+    - Changes stay as they were, and dependencies become changes (that the observer needs to listen to)
+  - I like the idea of storing it as a bunch of nested maps, which would allow searches to terminate early in many cases. Ie. probably better if the average operation involves comparing wide but shallow paths
+  - If, however, the average operation handles a small number of deep paths, perhaps it's better to simply operate on a set?
+  - For now, I'll take the simplest operation, which I think is probably the nested approach. That way you can select subsets much more easily
+  - So the internal representation will be:
+    - A map of segments to values
+    - If the value is another map, that means there's an extension of the path
+    - If instead the value is some specific value, eg. `true`, that means it's simply the end of that path
+      - Perhaps a better thing to use here would be an empty map? I think that would be fine
+        - This does actually work much better, as then a predicate for "has the value changed" can end in a map itself. Another consequence of this is that an empty map implies everything on that route has changed, whereas `nil` means nothing on that route has changed
+  - Operations I can think of off the top of my head, which will need to be implemented:
+    - [x] Convert a path - as a vector - into the internal representation
+      - Decided to force this to take a sequence instead of putting it into a variable number of arguments, as I can imagine we'll end up passing paths around quite a lot and calling `apply` all the time might get old quickly
+    - [ ] Add a new path into a map of changes
+      - Actually in the current representation there's no real distinction between a single change and a list of changes - so a better name for this would perhaps be a merge
+    - [ ] Find the intersection of two change sets
+      - I'm pretty sure this is a symmetrical operation? Not sure though
