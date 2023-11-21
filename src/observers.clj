@@ -32,14 +32,14 @@
 
           managed-observer
           (manage observer
-                  (assoc-in scope (apply vector :state path) (:value managed-property))
-                  (merge-changes changes
-                                 (when (relevant-changes (:changes managed-property)
-                                                         changes)
-                                   (path-changes))))]
+                  (assoc-in scope path (:value managed-property))
+                  (merge-changes
+                   changes
+                   (when
+                    (relevant-changes (:changes managed-property) changes)
+                     path-changes)))]
       {:value (:value managed-observer)
-       :changes (if (relevant-changes (:changes managed-property)
-                                      (:changes managed-observer))
+       :changes (if (relevant-changes path-changes (:changes managed-observer))
                   (merge-changes (:changes managed-observer)
                                  (:changes managed-property))
                   (:changes managed-observer))})))
