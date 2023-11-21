@@ -282,6 +282,21 @@
     - This doesn't need to listen to itself to manually update the value; that should be done externally (I think?)
       - Though a valid question is that of how it's going to pass down a swappable value
         - Perhaps this is one for the `defcomponent` macro
+    - How should dependencies be handled?
+      - I don't actually think this needs to export any dependencies
+      - It doesn't need to be notified of any changes, since the changes will be applied to it directly and externally
+      - The dependencies of the default observer from which it derives its initial value don't need to be returned, as the default observer won't be evaluated again after the state has been set initially
+      - Actually I suppose it should return the path at which the state is stored as a dependency
+        - Because this does both the storage and the accessing, it might be used by other observers directly, which will need to know when it may have changed
+      - Really, all of this confusion just suggests that we need a more rigorous formal definition of what should be included in the dependencies: any value which, if changed, might prompt the output of this observer to also change (even if it would have been able to produce that value without knowing about the change to the observer's value)
+    - How does the state both modify the current scope and return the value?
+      - It probably shouldn't
+        - Hence it's fine for this to not return any dependencies, and just return the value itself. The result of the state will need to be looked up independently elsewhere
+          - That might be a good thing, preventing the same behaviour (lookup logic) from being implemented twice in separate locations
+          - It is going to be a bit of a pain to use, though
+          - An alternative would be for state to call its own child observer, but I don't think that's going to be useful to anyone
+            - This might be necessary, in fact, because it needs to pass the modified scope forward to be used by another observer. This isn't possible if it simply returns the value directly (the caller wouldn't know that the returned value needs to be used to override the scope's `:state`, so this wouldn't actually be managing the state at all)
+            - Final (I think) conclusion: this doesn't need to add any dependencies. If the state has changed, it will already be included in the changes passed into this. If it's being built for the first time, the child observer will end up being called with a `nil` state anyway
   - [ ] `children`
     - Could also be called `manage-children`, `cull`, or something like that
     - Not yet entirely sure what the purpose would be, but it feels intuitively as though something like this will be required
@@ -304,6 +319,7 @@
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
         - This applies to a lot of things, really
+    - Also adds the dependencies of that entity to the returned dependencies
   - [ ] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
