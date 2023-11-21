@@ -380,3 +380,12 @@
       - Implemented and seems to be working well
     - [ ] Find the intersection of two change sets
       - I'm pretty sure this is a symmetrical operation? Not sure though
+      - What's actually meant by this in the real world?
+        - I have a set of realised changes, and a set of depended changes. I then want to know whether any of the depended changes have actually changed
+        - One base case here is: I've ended up with an empty map (ie. I'm listening to all changes) and some other value representing the realised changes. There is no intersection iff the other value is `nil`
+          - This may actually be symmetric: if the listened changes are `nil`, there's never an intersection
+        - What about the remaining case?
+          - The listened map contains some values, so you want to map through each of these, applying the function recursively to each key. But you also want to reduce the set at the end: if each key ends up being mapped to `nil`, you want to return `nil` for the whole thing
+          - Other than that, seems it works quite well. I think in the end it ended up being _not_ symmetrical
+      - Perhaps it's better to call this something like `changed?`
+        - That makes it sound like it's returning a boolean, though, which we don't necessarily want
