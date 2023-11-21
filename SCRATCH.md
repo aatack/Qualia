@@ -248,7 +248,7 @@
   - The entity does not need to return a list of values that have changed. This is because the caller knows if it needs to check whether any of the resulting values have changed, and has both the old and new values at this point; so it can perform the check itself
     - Performing that check will also be pretty cheap in clojure
 - With all of the above in mind, what are the most basic entities needed to start building up more complex components?
-  - [ ] `cache`
+  - [x] `cache`
     - Could also be called `guard`
       - These may actually be slightly different things. Caching would prevent a component from being rerun if none if its dependencies have changed, whereas guarding would watch a value and remove it from the list of changed values if - even though its source has said it may have changed - its actual value is the same
         - This would be useful when eg. translating a mouse position that actually is required, but it can be stored as `nil` when it's outside a component and so doesn't actually change in the majority of cases
@@ -327,7 +327,7 @@
     - [ ] Could this manage the arguments as well?
       - For example, if `defcomponent` were defined as wrapping something in a child, perhaps `child` could also do the work of just dumping the arguments directly into the scope - which is exactly what would be done anyway
       - It's not the end of the world if it couldn't; it'd just make everything a bit simpler if we could get rid of the arguments altogether
-  - [ ] `property`
+  - [x] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
         - This applies to a lot of things, really
@@ -335,7 +335,7 @@
       - This shouldn't need to be done by this observer, actually, since it's calling the child directly
         - What should really happen is that is passes an updated list of changes down to the child observer (if any of the dependencies of the exported value have changed, that exported path should be changed too). Then, if the child ends up depending on the exported path, the property dependencies should be added to the returned dependencies
           - When looking at it like this, the similarities between this and `provide` become much more apparent
-    - For the verb-based naming scheme, this could instead be called `export`
+    - For the verb-based naming scheme, this could instead be called ~~`export`~~ `Write`
   - [ ] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
@@ -348,12 +348,14 @@
       - Difference between this and `derived` is that, because it accesses a specific value, _it would be able to add that value as a dependency_
         - In this sense it has a significant overlap with `consume`
         - It's also distinguished from `derived` in the sense that that form would only pass in the workspace, as opposed to the whole scope; so it sort of forces you to unpack the values yourself via other forms; hence adding the dependencies automatically
-  - [ ] `argument`
+  - [x] `argument`
     - Similar to `context`, but for the arguments list
     - Takes an integer or keyword, and grabs the corresponding one
       - I suppose technically it could just as easily do nested lookups too
-  - [ ] `chain`
+    - Looks like this is going to be managed by the `Call` observer
+  - [x] `chain`
     - Similar to the threading macro, but is context-aware (ie. will pass down the context/arguments/state/scope as it goes)
+    - I actually think this can just be solved by the existing threading macro outright, since any observers that need to pass this context down will do it themselves
   - [x] `consume`
     - Take and return a value from a particular path in the scope
     - Also include that path in the list of dependencies
