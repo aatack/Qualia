@@ -322,6 +322,9 @@
       - I suppose in theory the key could also be dynamically computed by an entity
         - This applies to a lot of things, really
     - Also adds the dependencies of that entity to the returned dependencies
+      - This shouldn't need to be done by this observer, actually, since it's calling the child directly
+        - What should really happen is that is passes an updated list of changes down to the child observer (if any of the dependencies of the exported value have changed, that exported path should be changed too). Then, if the child ends up depending on the exported path, the property dependencies should be added to the returned dependencies
+          - When looking at it like this, the similarities between this and `provide` become much more apparent
     - For the verb-based naming scheme, this could instead be called `export`
   - [ ] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
