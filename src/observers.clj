@@ -50,6 +50,6 @@
     (let [rerun (or (nil? (:state scope))
                     (relevant-changes (-> scope :state :changes) changes))
           managed-observer (manage observer scope changes)]
-      (if rerun (let [] {:value managed-observer
-                         :changes (:changes managed-observer)})
-          (-> scope :state :value)))))
+      (if rerun
+        {:value managed-observer :changes (:changes managed-observer)}
+        (-> scope :state :value)))))
