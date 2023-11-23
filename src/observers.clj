@@ -7,22 +7,22 @@
 (defrecord Lookup [path]
   Observer
   (manage [_ scope _]
-    {:value (get-in scope path)
-     :changes (as-changes path)}))
+    {::value (get-in scope path)
+     ::changes (as-changes path)}))
 
 (defrecord Persist [path default observer]
   Observer
   (manage [_ scope changes]
     (manage observer
-            (update-in scope (apply vector :state path)
-                       #(or % (:value (manage default scope changes))))
+            (update-in scope (apply vector ::state path)
+                       #(or % (::value (manage default scope changes))))
             changes)))
 
 (defrecord Derive [function]
   Observer
   (manage [_ scope _]
-    {:value (function (:workspace scope))
-     :changes (as-changes [:workspace])}))
+    {::value (function (::workspace scope))
+     ::changes (as-changes [::workspace])}))
 
 (defrecord Write [path property observer]
   Observer
@@ -32,24 +32,24 @@
 
           managed-observer
           (manage observer
-                  (assoc-in scope path (:value managed-property))
+                  (assoc-in scope path (::value managed-property))
                   (merge-changes
                    changes
                    (when
-                    (relevant-changes (:changes managed-property) changes)
+                    (relevant-changes (::changes managed-property) changes)
                      path-changes)))]
-      {:value (:value managed-observer)
-       :changes (if (relevant-changes path-changes (:changes managed-observer))
-                  (merge-changes (:changes managed-observer)
-                                 (:changes managed-property))
-                  (:changes managed-observer))})))
+      {::value (::value managed-observer)
+       ::changes (if (relevant-changes path-changes (::changes managed-observer))
+                   (merge-changes (::changes managed-observer)
+                                  (::changes managed-property))
+                   (::changes managed-observer))})))
 
 (defrecord Cache [observer]
   Observer
   (manage [_ scope changes]
-    (let [rerun (or (nil? (:state scope))
-                    (relevant-changes (-> scope :state :changes) changes))
+    (let [rerun (or (nil? (::state scope))
+                    (relevant-changes (-> scope ::state ::changes) changes))
           managed-observer (manage observer scope changes)]
       (if rerun
-        {:value managed-observer :changes (:changes managed-observer)}
-        (-> scope :state :value)))))
+        {::value managed-observer ::changes (::changes managed-observer)}
+        (-> scope ::state ::value)))))
