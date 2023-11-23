@@ -24,25 +24,27 @@
     {::value (function (::workspace scope))
      ::changes (as-changes [::workspace])}))
 
-(defrecord Write [path property observer]
+(defrecord Write [path property observer lazy]
   Observer
   (manage [_ scope changes]
-    (let [path-changes (as-changes path)
-          managed-property (manage property scope changes)
+    (if (and lazy (not (-> scope ::workspace ::export path)))
+      (manage observer scope changes)
+      (let [path-changes (as-changes path)
+            managed-property (manage property scope changes)
 
-          managed-observer
-          (manage observer
-                  (assoc-in scope path (::value managed-property))
-                  (merge-changes
-                   changes
-                   (when
-                    (relevant-changes (::changes managed-property) changes)
-                     path-changes)))]
-      {::value (::value managed-observer)
-       ::changes (if (relevant-changes path-changes (::changes managed-observer))
-                   (merge-changes (::changes managed-observer)
-                                  (::changes managed-property))
-                   (::changes managed-observer))})))
+            managed-observer
+            (manage observer
+                    (assoc-in scope path (::value managed-property))
+                    (merge-changes
+                     changes
+                     (when
+                      (relevant-changes (::changes managed-property) changes)
+                       path-changes)))]
+        {::value (::value managed-observer)
+         ::changes (if (relevant-changes path-changes (::changes managed-observer))
+                     (merge-changes (::changes managed-observer)
+                                    (::changes managed-property))
+                     (::changes managed-observer))}))))
 
 (defrecord Cache [observer]
   Observer

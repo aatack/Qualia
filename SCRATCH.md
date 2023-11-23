@@ -340,6 +340,10 @@
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
     - How will this actually be handled by the caller? How does it know whether it's getting a lazy property or just a normal one?
+    - This could just as easily be handled by a flag on the regular `Write`
+      - The write would then be performed iff either it's an eager write, or the path is included in the list of requested paths (passed from the relevant `Call` somewhere further up in the call stack)
+        - [ ] Where should export requests from calls be stored? In the workspace?
+          - That probably makes sense
   - [x] `lookup`
     - Returns a value from the scope
     - Although this is technically a subset of `derived`, it's also so commonly used that storing an anonymous function in `lookup` to accomplish this might not be worth it
