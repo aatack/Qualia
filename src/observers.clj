@@ -58,3 +58,8 @@
                            [::state ::changes] (::changes managed-observer))
          ::changes (::changes managed-observer)}
         (-> scope ::state ::value)))))
+
+(defrecord Call [inputs outputs child observer]
+  Observer
+  (manage [_ scope changes]
+    (manage observer scope changes)))

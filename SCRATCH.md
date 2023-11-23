@@ -336,7 +336,7 @@
         - What should really happen is that is passes an updated list of changes down to the child observer (if any of the dependencies of the exported value have changed, that exported path should be changed too). Then, if the child ends up depending on the exported path, the property dependencies should be added to the returned dependencies
           - When looking at it like this, the similarities between this and `provide` become much more apparent
     - For the verb-based naming scheme, this could instead be called ~~`export`~~ `Write`
-  - [ ] `lazy-property`
+  - [x] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
     - How will this actually be handled by the caller? How does it know whether it's getting a lazy property or just a normal one?
