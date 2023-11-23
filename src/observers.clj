@@ -51,5 +51,7 @@
                     (relevant-changes (-> scope ::state ::changes) changes))
           managed-observer (manage observer scope changes)]
       (if rerun
-        {::value managed-observer ::changes (::changes managed-observer)}
+        {::value (assoc-in (::value managed-observer)
+                           [::state ::changes] (::changes managed-observer))
+         ::changes (::changes managed-observer)}
         (-> scope ::state ::value)))))
