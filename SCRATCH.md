@@ -328,6 +328,12 @@
     - [ ] Could this manage the arguments as well?
       - For example, if `defcomponent` were defined as wrapping something in a child, perhaps `child` could also do the work of just dumping the arguments directly into the scope - which is exactly what would be done anyway
       - It's not the end of the world if it couldn't; it'd just make everything a bit simpler if we could get rid of the arguments altogether
+    - Quick list of modifications that need to be made to the changes state:
+      - Any changes relating to the `::state` and `::workspace` need to be removed altogether, since those are being reset
+      - Changes from each of the arguments need to be added in
+        - This appears to be a fairly common pattern, and is also a relatively involved process; perhaps a `propagate-changes` function is in order
+      - Upon returning from the child, any parts of the state that are no longer the same as they were previously need to be included in the changes passed to the final observer
+        - To first order, it's probably fine to denote that all outputs have changed; since we know nothing about each output's individual inputs, we only know that they are an output of the child and that it's been rerun. Hence determining whether the output has actually changed should be left to a `Guard` clause, or something like that
   - [x] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
@@ -337,12 +343,6 @@
         - What should really happen is that is passes an updated list of changes down to the child observer (if any of the dependencies of the exported value have changed, that exported path should be changed too). Then, if the child ends up depending on the exported path, the property dependencies should be added to the returned dependencies
           - When looking at it like this, the similarities between this and `provide` become much more apparent
     - For the verb-based naming scheme, this could instead be called ~~`export`~~ `Write`
-    - Quick list of modifications that need to be made to the changes state:
-      - Any changes relating to the `::state` and `::workspace` need to be removed altogether, since those are being reset
-      - Changes from each of the arguments need to be added in
-        - This appears to be a fairly common pattern, and is also a relatively involved process; perhaps a `propagate-changes` function is in order
-      - Upon returning from the child, any parts of the state that are no longer the same as they were previously need to be included in the changes passed to the final observer
-        - To first order, it's probably fine to denote that all outputs have changed; since we know nothing about each output's individual inputs, we only know that they are an output of the child and that it's been rerun. Hence determining whether the output has actually changed should be left to a `Guard` clause, or something like that
   - [x] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
