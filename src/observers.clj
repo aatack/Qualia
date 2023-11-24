@@ -10,6 +10,12 @@
     {::value (get-in scope path)
      ::changes (as-changes path)}))
 
+(defrecord Derive [function]
+  Observer
+  (manage [_ scope _]
+    {::value (function (::workspace scope))
+     ::changes (as-changes [::workspace])}))
+
 (defrecord Persist [path default observer]
   Observer
   (manage [_ scope changes]
@@ -18,13 +24,7 @@
                        #(or % (::value (manage default scope changes))))
             changes)))
 
-(defrecord Derive [function]
-  Observer
-  (manage [_ scope _]
-    {::value (function (::workspace scope))
-     ::changes (as-changes [::workspace])}))
-
-(defrecord Write [path property observer lazy]
+(defrecord Write [path property lazy observer]
   Observer
   (manage [_ scope changes]
     (let [path-changes (as-changes path)]
@@ -59,7 +59,7 @@
          ::changes (::changes managed-observer)}
         (-> scope ::state ::value)))))
 
-(defrecord Call [inputs outputs child observer]
+(defrecord Call [path inputs outputs child observer]
   Observer
   (manage [_ scope changes]
     (manage observer scope changes)))
