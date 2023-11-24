@@ -62,4 +62,5 @@
 (defrecord Call [path inputs outputs child observer]
   Observer
   (manage [_ scope changes]
-    (manage observer scope changes)))
+    (let [path-changes (as-changes path)]
+      (manage observer scope changes))))

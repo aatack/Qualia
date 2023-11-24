@@ -316,6 +316,7 @@
     - Could also be named `call` or `delegate`
     - Call another entity, providing it with a new scope, arguments, and potentially new state as well
     - Still need to work out how keys will work here. Calls could be stored as properties, eg. `(q/property key (q/call custom-component (q/lookup :name)))`
+      - The problem with this is that it's the property that resets the state/workspace, so all the lookups and any other calls won't work at that point
     - Should also be able to take a `:check #{paths}` value, in which case it will check the resulting value before storing it in the current state. If any of the checked paths have changed, they will be added to the list of changes being passed forward
       - As such I think this one will need to take a child to call afterwards
         - I suppose a convention could be made of having an optional child which, if `nil`, is not called; the results are returned directly
@@ -336,6 +337,12 @@
         - What should really happen is that is passes an updated list of changes down to the child observer (if any of the dependencies of the exported value have changed, that exported path should be changed too). Then, if the child ends up depending on the exported path, the property dependencies should be added to the returned dependencies
           - When looking at it like this, the similarities between this and `provide` become much more apparent
     - For the verb-based naming scheme, this could instead be called ~~`export`~~ `Write`
+    - Quick list of modifications that need to be made to the changes state:
+      - Any changes relating to the `::state` and `::workspace` need to be removed altogether, since those are being reset
+      - Changes from each of the arguments need to be added in
+        - This appears to be a fairly common pattern, and is also a relatively involved process; perhaps a `propagate-changes` function is in order
+      - Upon returning from the child, any parts of the state that are no longer the same as they were previously need to be included in the changes passed to the final observer
+        - To first order, it's probably fine to denote that all outputs have changed; since we know nothing about each output's individual inputs, we only know that they are an output of the child and that it's been rerun. Hence determining whether the output has actually changed should be left to a `Guard` clause, or something like that
   - [x] `lazy-property`
     - Include a `:cache` flag for expensive calls that may be called multiple times
       - Though this shouldn't really be necessary, as that'll be handled by the caller...
