@@ -333,7 +333,23 @@
       - Changes from each of the arguments need to be added in
         - This appears to be a fairly common pattern, and is also a relatively involved process; perhaps a `propagate-changes` function is in order
       - Upon returning from the child, any parts of the state that are no longer the same as they were previously need to be included in the changes passed to the final observer
-        - To first order, it's probably fine to denote that all outputs have changed; since we know nothing about each output's individual inputs, we only know that they are an output of the child and that it's been rerun. Hence determining whether the output has actually changed should be left to a `Guard` clause, or something like that
+        - ~~To first order, it's probably fine to denote that all outputs have changed; since we know nothing about each output's individual inputs, we only know that they are an output of the child and that it's been rerun. Hence determining whether the output has actually changed should be left to a `Guard` clause, or something like that~~
+          - Just denote that the entire child has changed
+            - This could be problematic later, even with guards, since there's no way of denoting "all paths _except_ this key have changed" in the current setup
+            - Nevertheless, it is required that there's _some_ indication that the entire child has changed, since it is accessible via the state and there may have been changes that weren't exported
+    - **Conclusion**:
+      - Take:
+        - A path at which the result of the call will be stored
+        - Map of inputs, where the values are observers - to be evaluated within the current scope, before it's reset for the child - and the keys are the paths at which each of their results will be stored in the new workspace
+        - Map of outputs, where the value is the path of the value within the result (from the child) and the key is the corresponding path at which that value will be stored - typically somewhere in the workspace
+          - This is the part that I suspect might be able to be taken out to a `Let` observer
+            - Though note that that would involve a conscious choice to get rid of more fine-grained information about which of the outputs changed
+          - In fact you probably don't really even need a specific "let" observer at all, since - since you know where the call is being dumped in the resulting scope - you can extract the results manually
+            - So it would be good to have as a convenience, but isn't strictly required as an atomic observer
+            - One thing to note is that there's now no way of setting the dependencies for lazy properties. This would need to be done manually, which is perfectly possible, since that would just be an input with the `::export` key (it gets dumped into the workspace automatically, by nature of its being an argument)
+          - ==> I reckon we can actually get away without an output map for now
+        - A child observer, which is evaluated with the newly determined inputs (and their relative changes). Its returned value is then used to determine the outputs
+        - A following observer, which is evaluated with the results of the evaluation of the child
   - [x] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity
