@@ -341,7 +341,7 @@
       - Take:
         - A path at which the result of the call will be stored
         - Map of inputs, where the values are observers - to be evaluated within the current scope, before it's reset for the child - and the keys are the paths at which each of their results will be stored in the new workspace
-        - Map of outputs, where the value is the path of the value within the result (from the child) and the key is the corresponding path at which that value will be stored - typically somewhere in the workspace
+        - ~~Map of outputs, where the value is the path of the value within the result (from the child) and the key is the corresponding path at which that value will be stored - typically somewhere in the workspace~~
           - This is the part that I suspect might be able to be taken out to a `Let` observer
             - Though note that that would involve a conscious choice to get rid of more fine-grained information about which of the outputs changed
           - In fact you probably don't really even need a specific "let" observer at all, since - since you know where the call is being dumped in the resulting scope - you can extract the results manually
@@ -350,6 +350,21 @@
           - ==> I reckon we can actually get away without an output map for now
         - A child observer, which is evaluated with the newly determined inputs (and their relative changes). Its returned value is then used to determine the outputs
         - A following observer, which is evaluated with the results of the evaluation of the child
+    - As for the implementation:
+      - For each of the inputs' values, compute the result and dependencies given the current scope and changes
+      - Create a new scope where the `::state` and `::workspace` are cleared - ie. empty maps
+      - Initialise the workspace with the result of each input, assigned to its corresponding path (its key in the original input map)
+        - [ ] As a more general point, consider renaming `::value` to `::result`, which I believe might curtail some confusion
+      - If possible, initialise the state to the state from the original scope, but at the child's path (ie. take the previous result of the call, if there is one)
+      - Manage the child in the newly created workspace, with the child state and the workspace initialised from the inputs
+        - [ ] Rename the inputs to the arguments; makes more sense I think
+      - Adjust the dependencies:
+        - For each input, if the managed child depends on that input's path, add the managed input's dependencies to the returned dependencies
+        - Ignore all dependencies on the workspace (they have been handled by the above step)
+        - For all dependencies on the state, nest them within the path
+          - Eg. if the path is `[:a :b]`, a dependency on `[:state :property]` should become `[:state :a :b :property]`
+      - Call the child observer with the resulting scope and changes
+    - ...I still feel like I'm missing something obvious from this implementation. It's definitely getting close though
   - [x] `property`
     - Takes a key (path?) and another entity, computes the value of the entity, and dumps it into the state under the specified key
       - I suppose in theory the key could also be dynamically computed by an entity

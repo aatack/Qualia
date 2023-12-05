@@ -59,7 +59,7 @@
          ::changes (::changes managed-observer)}
         (-> scope ::state ::value)))))
 
-(defrecord Call [path inputs outputs child observer]
+(defrecord Call [path inputs child observer]
   Observer
   (manage [_ scope changes]
     (let [path-changes (as-changes path)]
