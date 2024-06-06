@@ -5,6 +5,7 @@
     (fn [target]
       {:value (str "Target " target " count " @count)
        :handle (fn [key]
+                 (println "-->" key)
                  (when (= key target)
                    (swap! count inc)))})))
 
@@ -16,14 +17,19 @@
                   (swap! cache assoc key (head)))
                 (apply (get @cache key) body))]
     (fn []
-      (let [children (for [letter letters]
-                       (watch letter example-child letter))]
-        {:value (str "Count: " @letters)
+      (let [children (map (fn [letter]
+                            (watch letter example-child letter))
+                          @letters)]
+        (println (type children))
+        {:value (str "Count: " @letters (into [] (map :value children)))
          :handle (fn [key]
+                   (println "Key" key)
                    (when (= (str (first key)) "+")
                      (swap! letters conj (str (second key))))
-                   (for [child children]
-                     ((:handle child) key)))}))))
+                   (println "Children" children)
+                   (doall (for [child children]
+                            (do (println "Running" child key)
+                                ((:handle child) key)))))}))))
 
 (comment
 
@@ -31,9 +37,13 @@
 
   (def c (example-child))
 
-  (c "f")
-
   (app)
 
-  ((:handle (app)) "c")
+  (c "f")
+
+  (def _ ((:handle (app)) "+c"))
+  (def _ ((:handle (app)) "c"))
+
+
+
   ((:handle (c "f")) "f"))
