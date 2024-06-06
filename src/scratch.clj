@@ -5,7 +5,6 @@
     (fn [target]
       {:value (str "Target " target " count " @count)
        :handle (fn [key]
-                 (println "-->" key)
                  (when (= key target)
                    (swap! count inc)))})))
 
@@ -20,16 +19,12 @@
       (let [children (map (fn [letter]
                             (watch letter example-child letter))
                           @letters)]
-        (println (type children))
         {:value (str "Count: " @letters (into [] (map :value children)))
          :handle (fn [key]
-                   (println "Key" key)
                    (when (= (str (first key)) "+")
                      (swap! letters conj (str (second key))))
-                   (println "Children" children)
                    (doall (for [child children]
-                            (do (println "Running" child key)
-                                ((:handle child) key)))))}))))
+                            ((:handle child) key))))}))))
 
 (comment
 
@@ -43,7 +38,5 @@
 
   (def _ ((:handle (app)) "+c"))
   (def _ ((:handle (app)) "c"))
-
-
 
   ((:handle (c "f")) "f"))
