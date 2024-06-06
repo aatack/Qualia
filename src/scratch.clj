@@ -1,5 +1,12 @@
 (ns scratch)
 
+(defn watcher []
+  (let [cache (atom {})]
+    (fn [key head & body]
+      (when-not (contains? @cache key)
+        (swap! cache assoc key (head)))
+      (apply (get @cache key) body))))
+
 (defn example-child []
   (let [count (atom 0)]
     (fn [target]
@@ -10,11 +17,7 @@
 
 (defn example []
   (let [letters (atom [])
-        cache (atom {})
-        watch (fn [key head & body]
-                (when-not (contains? @cache key)
-                  (swap! cache assoc key (head)))
-                (apply (get @cache key) body))]
+        watch (watcher)]
     (fn []
       (let [children (map (fn [letter]
                             (watch letter example-child letter))
