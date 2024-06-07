@@ -11,7 +11,8 @@
   (let [children (atom {})
         inner-watch (fn [key child-mount & child-arguments]
                       ; This does not yet track which arguments the child was most
-                      ; recently applied to
+                      ; recently applied to. This could be done by storing an atom of
+                      ; arguments alongside each child
                       (when-not (contains? @children key)
                         (swap! children assoc key
                                (apply watch child-mount child-arguments)))
@@ -23,7 +24,27 @@
        (add-watch dep :k (fn [& args] (reset! state (apply render arguments))))))
     state))
 
-(defn example-child [w]
+(defn mount [context component & arguments]
+  (let [arguments-state (atom arguments)
+        children-state (atom {})
+        component-state (atom (component context))
+        result-state ()]))
+
+
+
+
+(defn r [definition]
+  (let [context (atom {})]
+    (definition context)))
+
+
+(defn recursive-example [x]
+  (fn [context]
+    (str x (recursive-example (dec x)))))
+
+
+
+(defn example-child [context]
   (let [count (atom 0)]
     (fn [target]
       {:value (str "Target " target " count " @count)
@@ -46,6 +67,10 @@
                             ((:handle child) key))))}))))
 
 (comment
+
+  (def a (atom 1))
+  (add-watch a :a (fn [& args] (println args)))
+  (reset! a 1)
 
   (def x (watch example-child "c"))
 
