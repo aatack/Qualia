@@ -105,13 +105,12 @@
                    (if (contains? current key)
                      current
                      (assoc current key value))))
-  (get @context key))
+  (cursor context key))
 
 
 (defn tracker [character]
   (fn [context]
     (let [count (state context :count 0)]
-      (println count)
       {:value @count
        :handle (fn [key]
                  (when (= key character)
@@ -124,9 +123,11 @@
 
   (def t (tracker "c"))
 
-  (def app (t (atom {})))
+  (def app-state (atom {}))
 
-  (def _ ((:handle (app)) "+c"))
-  (def _ ((:handle (app)) "c"))
+  (t app-state)
+
+  (def _ ((:handle (t app-state)) "+c"))
+  (def _ ((:handle (t app-state)) "c"))
 
   ((:handle (c "f")) "f"))
