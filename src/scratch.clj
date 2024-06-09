@@ -26,26 +26,18 @@
     (swap! child-context (fn [current] (or current (atom {}))))
     (add-watch @child-context :parent
                (fn [_ _ old new]
-                 (println (not= (:value old) (:value new)) (:value old) (:value new))
-                 (when (not= (:value old) (:value new))
+                 (when (not= (assoc (:value old) :handle nil)
+                             (assoc (:value new) :handle nil))
                    ((:render @context)))))
     (mount builder @child-context)))
-
-(def tracker-handler (memoize (fn [character count]
-                                (fn [key]
-                                  (when (= key character)
-                                    (swap! count inc))))))
 
 (defn tracker [character]
   (fn [context]
     (let [count (state context :count 0)]
       {:value @count
-       :handle (tracker-handler character count)})))
-
-(def tracker-pair-handler (memoize (fn [left-tracker-handler right-tracker-handler]
-                                     (fn [key]
-                                       (left-tracker-handler key)
-                                       (right-tracker-handler key)))))
+       :handle (fn [key]
+                 (when (= key character)
+                   (swap! count inc)))})))
 
 (defn tracker-pair [left-character right-character]
   (fn [context]
@@ -53,7 +45,9 @@
           right-tracker (child context :right (tracker right-character))]
       {:value {left-character (:value left-tracker)
                right-character (:value right-tracker)}
-       :handle (tracker-pair-handler (:handle left-tracker) (:handle right-tracker))})))
+       :handle (fn [key]
+                 ((:handle left-tracker) key)
+                 ((:handle right-tracker) key))})))
 
 (defn build-context [] (atom {}))
 
