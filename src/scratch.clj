@@ -78,6 +78,28 @@
                             ((:handle child) key))))}))))
 
 
+
+(defrecord Cursor [a k]
+  clojure.lang.IDeref
+  (deref [_]
+    (get @a k))
+
+  clojure.lang.IAtom
+  (reset [_ new-value]
+    (swap! a assoc k new-value))
+
+  (swap [_ f]
+    (swap! a update k f))
+  (swap [_ f x]
+    (swap! a update k f x))
+  (swap [_ f x y]
+    (swap! a update k f x y))
+  (swap [_ f x y more]
+    (swap! a update k #(apply f % x y more))))
+
+(defn cursor [a k]
+  (Cursor. a k))
+
 (defn state [context key value]
   (swap! context (fn [current]
                    (if (contains? current key)
@@ -107,5 +129,4 @@
   (def _ ((:handle (app)) "+c"))
   (def _ ((:handle (app)) "c"))
 
-  ((:handle (c "f")) "f")
-  )
+  ((:handle (c "f")) "f"))
