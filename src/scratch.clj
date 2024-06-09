@@ -104,8 +104,7 @@
   (let [value (cursor context :value)
         render (fn []
                  (reset! value (component context)))]
-    (render)
-    context))
+    (render)))
 
 (defn state [context key value]
   (swap! context (fn [current]
@@ -117,7 +116,9 @@
       (cursor key)))
 
 (defn child [context key builder]
-  ())
+  (let [child-context (-> context (cursor :children) (cursor key))]
+    (swap! child-context (fn [current] (or current (atom {}))))
+    (mount builder child-context)))
 
 
 (assoc-in {} [:state :x] 1)
@@ -136,16 +137,14 @@
 
 (comment
 
-  (def t (tracker "c"))
+  (def c (build-context))
 
-  (def app (mount t (build-context)))
-  (def app (mount (tracker "d") app))
+  (def app (mount (tracker "c") c))
+  (def app (mount (tracker "d") c))
 
-  @app
+  app
 
-  (t app-state)
-
-  (def _ ((:handle (:value @app)) "+c"))
-  (def _ ((:handle (:value @app)) "c"))
+  (def _ ((:handle (:value app)) "+c"))
+  (def _ ((:handle (:value app)) "c"))
 
   ((:handle (c "f")) "f"))
