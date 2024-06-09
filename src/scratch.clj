@@ -31,6 +31,17 @@
         result-state ()]))
 
 
+(def *path* (atom []))
+(def *state* (atom {}))
+
+
+
+
+
+(defn render [definition & arguments]
+  (let [context (atom {:stack [] :state {}})
+        state (fn [k] (get (get-in (:state @context) (:stack @context)) k))]))
+
 
 
 (defn r [definition]
@@ -66,29 +77,35 @@
                    (doall (for [child children]
                             ((:handle child) key))))}))))
 
+
+(defn state [context key value]
+  (swap! context (fn [current]
+                   (if (contains? current key)
+                     current
+                     (assoc current key value))))
+  (get @context key))
+
+
+(defn tracker [character]
+  (fn [context]
+    (let [count (state context :count 0)]
+      (println count)
+      {:value @count
+       :handle (fn [key]
+                 (when (= key character)
+                   (swap! count inc)))})))
+
+
+
+
 (comment
 
-  (def a (atom 1))
-  (add-watch a :a (fn [& args] (println args)))
-  (reset! a 1)
+  (def t (tracker "c"))
 
-  (def x (watch example-child "c"))
-
-  ((:handle @x) "c")
-
-  @x
-
-  @(reactive-atom example-child "a")
-
-  (def app (example))
-
-  (def c (example-child))
-
-  (:value (app))
-
-  (c "f")
+  (def app (t (atom {})))
 
   (def _ ((:handle (app)) "+c"))
   (def _ ((:handle (app)) "c"))
 
-  ((:handle (c "f")) "f"))
+  ((:handle (c "f")) "f")
+  )
