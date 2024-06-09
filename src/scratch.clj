@@ -1,10 +1,15 @@
-(ns scratch 
+(ns scratch
   (:require [state :refer [cursor]]))
 
 (defn mount [component context]
   (let [value (cursor context :value)
         render (fn []
                  (reset! value (component context)))]
+    (add-watch context :mount
+               (fn [_ _ old new]
+                 (when (or (not= (:state old) (:state new))
+                           (not= (:children old) (:children new)))
+                   (render))))
     (render)))
 
 (defn state [context key value]
@@ -51,7 +56,9 @@
   (def app (mount (tracker "c") c))
   (def app (mount (tracker "d") c))
 
-  (-> app :value)
+;;   (-> app :value)
+
+  (-> @c :value :value)
 
   (def _ ((:handle app) "d"))
   (def _ ((:handle app) "c"))
