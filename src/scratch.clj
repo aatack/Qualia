@@ -101,22 +101,26 @@
   (Cursor. a k))
 
 (defn mount [component context]
-  (let [resolved-context (or context (atom {}))
-        value (cursor resolved-context :value)
+  (let [value (cursor context :value)
         render (fn []
-                 (reset! value (component resolved-context)))]
+                 (reset! value (component context)))]
     (render)
-    resolved-context))
+    context))
 
 (defn state [context key value]
   (swap! context (fn [current]
-                   (if (contains? current key)
+                   (if (contains? (:state current) key)
                      current
-                     (assoc current key value))))
-  (cursor context key))
+                     (assoc-in current [:state key] value))))
+  (-> context
+      (cursor :state)
+      (cursor key)))
 
 (defn child [context key builder]
   ())
+
+
+(assoc-in {} [:state :x] 1)
 
 
 (defn tracker [character]
@@ -127,14 +131,14 @@
                  (when (= key character)
                    (swap! count inc)))})))
 
-
+(defn build-context [] (atom {}))
 
 
 (comment
 
   (def t (tracker "c"))
 
-  (def app (mount t nil))
+  (def app (mount t (build-context)))
   (def app (mount (tracker "d") app))
 
   @app
