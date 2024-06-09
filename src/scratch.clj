@@ -86,16 +86,16 @@
 
   clojure.lang.IAtom
   (reset [_ new-value]
-    (swap! a assoc k new-value))
+    (get (swap! a assoc k new-value) k))
 
   (swap [_ f]
-    (swap! a update k f))
+    (get (swap! a update k f) k))
   (swap [_ f x]
-    (swap! a update k f x))
+    (get (swap! a update k f x) k))
   (swap [_ f x y]
-    (swap! a update k f x y))
+    (get (swap! a update k f x y) k))
   (swap [_ f x y more]
-    (swap! a update k #(apply f % x y more))))
+    (get (swap! a update k #(apply f % x y more)) k)))
 
 (defn cursor [a k]
   (Cursor. a k))
@@ -118,10 +118,7 @@
 (defn child [context key builder]
   (let [child-context (-> context (cursor :children) (cursor key))]
     (swap! child-context (fn [current] (or current (atom {}))))
-    (mount builder child-context)))
-
-
-(assoc-in {} [:state :x] 1)
+    (mount builder @child-context)))
 
 
 (defn tracker [character]
@@ -132,6 +129,13 @@
                  (when (= key character)
                    (swap! count inc)))})))
 
+(defn tracker-pair [left-character right-character]
+  (fn [context]
+    (let [left-tracker (child context :left (tracker left-character))
+          right-tracker (child context :right (tracker right-character))]
+      {:value {left-character (:value left-tracker)
+               right-character (:value right-tracker)}})))
+
 (defn build-context [] (atom {}))
 
 
@@ -139,10 +143,11 @@
 
   (def c (build-context))
 
+  (def app (mount (tracker-pair "c" "d") c))
   (def app (mount (tracker "c") c))
   (def app (mount (tracker "d") c))
 
-  app
+  (-> app :value)
 
   (def _ ((:handle (:value app)) "+c"))
   (def _ ((:handle (:value app)) "c"))
