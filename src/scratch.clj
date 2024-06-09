@@ -134,7 +134,10 @@
     (let [left-tracker (child context :left (tracker left-character))
           right-tracker (child context :right (tracker right-character))]
       {:value {left-character (:value left-tracker)
-               right-character (:value right-tracker)}})))
+               right-character (:value right-tracker)}
+       :handle (fn [key]
+                 ((:handle left-tracker) key)
+                 ((:handle right-tracker) key))})))
 
 (defn build-context [] (atom {}))
 
@@ -149,7 +152,7 @@
 
   (-> app :value)
 
-  (def _ ((:handle (:value app)) "+c"))
-  (def _ ((:handle (:value app)) "c"))
+  (def _ ((:handle app) "d"))
+  (def _ ((:handle app) "c"))
 
   ((:handle (c "f")) "f"))
