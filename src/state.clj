@@ -20,3 +20,11 @@
 
 (defn cursor [a k]
   (Cursor. a k))
+
+(defrecord Context [refresh
+                    arguments
+                    state
+                    current
+                    provides
+                    consumes
+                    handler])
