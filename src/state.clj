@@ -24,7 +24,14 @@
 (defrecord Context [refresh
                     arguments
                     state
+                    children
                     current
                     provides
                     consumes
                     handler])
+
+(defrecord ComponentRun [result
+                         state
+                         children
+                         consumed
+                         handler])
