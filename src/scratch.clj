@@ -60,10 +60,6 @@
   (def app (mount (tracker "c") c))
   (def app (mount (tracker "d") c))
 
-;;   (-> app :value)
-
-  c
-
   (-> @c :value :value)
 
   (def _ ((:handle app) "d"))
