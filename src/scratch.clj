@@ -69,8 +69,8 @@
 
 (defn q-internal [initial builder]
   (fn [state updates context queue-update]
-    (let [internal (merge-maps (:internal state)
-                               initial
+    (let [internal (merge-maps initial ;; Override the defaults with the current state
+                               (:internal state)
                                (or (get [] updates) {}))
           wrapped-internal (map-vals internal
                                      (partial wrap-internal queue-update))]
