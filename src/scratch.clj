@@ -42,7 +42,18 @@
 (defn q-nested [entities builder]
   ^{::type ::nested}
   (fn [state updates context queue-update]
-    ()))
+    (let [updated-entities
+          (into {}
+                (map (fn [entity]
+                       (entity state
+                               updates
+                               context
+                               queue-update))
+                     entities))]
+      ((builder updated-entities) state
+                                  updates
+                                  context
+                                  queue-update))))
 
 (defn q-entity [builder]
   ;; Consider tracking arguments in the ephemeral state and asserting that they are nil
