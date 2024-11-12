@@ -44,16 +44,36 @@
   (fn [state updates context queue-update]
     (let [updated-entities
           (into {}
-                (map (fn [entity]
-                       (entity state
-                               updates
+                (map (fn [[key entity]]
+                       (entity (or (-> state :nested (get key)) {})
+                               (filter-updates updates key)
                                context
-                               queue-update))
-                     entities))]
-      ((builder updated-entities) state
-                                  updates
-                                  context
-                                  queue-update))))
+                               (wrap-queue-update queue-update key)))
+                     entities))
+
+          resulting-state
+          ((builder updated-entities)
+           (update state
+                   :internal
+                   (fn [current]
+                     (reduce dissoc
+                             current
+                             (keys updated-entities))))
+           (into {}
+                 (filter (fn [[key _]]
+                           (not (updated-entities key)))
+                         updates))
+           context
+           queue-update)]
+      (update resulting-state
+              :internal
+              (fn [current] (merge-maps current updated-entities))))))
+
+(defn filter-updates [updates key]
+  ...)
+
+(defn wrap-queue-update [queue-update key]
+  ...)
 
 (defn q-entity [builder]
   ;; Consider tracking arguments in the ephemeral state and asserting that they are nil
