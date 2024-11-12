@@ -78,3 +78,16 @@
 (defn def-nested [entities builder]
   (fn [state updates context]
     ()))
+
+(defn example-internal [x y]
+  (def-internal {:x x :y y}
+    (fn [values] (str (:x values) (:y values)))))
+
+(defn example-contextual [a]
+  (def-contextual {:x 1}
+    (str (example-internal 1 2) a)))
+
+(defn example-nested [f g]
+  (def-nested {:a (example-internal 1 2)
+               :b (example-contextual "test")}
+    (fn [values] (str (:a values) (:b values)))))
