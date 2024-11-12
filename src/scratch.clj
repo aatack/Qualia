@@ -1,5 +1,4 @@
-(ns scratch
-  (:require [state :refer [cursor]]))
+(ns scratch)
 
 (defn q-internal [initial builder]
   ^{::type ::internal}
