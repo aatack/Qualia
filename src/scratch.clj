@@ -70,7 +70,8 @@
               (fn [current] (merge-maps current updated-entities))))))
 
 (defn filter-updates [updates key]
-  ...)
+  (->> updates
+       (filter (fn [[item-key _]] (= (first item-key) key)))))
 
 (defn wrap-queue-update [queue-update key]
   ...)
