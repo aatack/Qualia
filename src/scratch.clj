@@ -66,3 +66,15 @@
   (def _ ((:handle app) "c"))
 
   ((:handle (c "f")) "f"))
+
+(defn def-internal [values builder]
+  (fn [state updates context]
+    ()))
+
+(defn def-contextual [values builder]
+  (fn [state updates context]
+    ()))
+
+(defn def-nested [entities builder]
+  (fn [state updates context]
+    ()))
