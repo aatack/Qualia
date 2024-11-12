@@ -8,7 +8,10 @@
                                (or (get [] updates) {}))
           wrapped-internal (map-vals internal
                                      (partial wrap-internal queue-update))]
-      ((builder internal) (assoc state :internal internal) updates context queue-update))))
+      ((builder internal) (assoc state :internal internal)
+                          updates
+                          context
+                          queue-update))))
 
 (defn merge-maps [&maps]
   ...)
