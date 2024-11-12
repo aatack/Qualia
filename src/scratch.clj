@@ -89,6 +89,16 @@
             (merge-maps context values)
             queue-update)))
 
+(defn q-consume [keys builder]
+  (fn [state updates context queue-update]
+    (let [values (into {} (map (fn [key] [key (context key)]) keys))]
+      (update ((builder values) state
+                                updates
+                                context
+                                queue-update)
+              :contextual
+              (fn [contextual] (merge-maps (or contextual {}) values))))))
+
 (defn q-nested [entities builder]
   (fn [state updates context queue-update]
     ()))
