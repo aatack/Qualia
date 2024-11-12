@@ -93,6 +93,15 @@
   (fn [state updates context queue-update]
     ()))
 
+(defn q-entity [builder]
+  (fn [&arguments]
+    ;; Pruning could be done at this point if needed
+    (fn [state updates context queue-update]
+      ((apply builder arguments) (assoc state :arguments arguments)
+                                 updates
+                                 context
+                                 queue-update))))
+
 (defn q-literal [value]
   (fn [state updates context queue-update]
     (assoc state :value value)))
