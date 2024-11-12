@@ -67,31 +67,31 @@
 
   ((:handle (c "f")) "f"))
 
-(defn def-internal [values builder]
+(defn q-internal [values builder]
   (fn [state updates context]
     ()))
 
-(defn def-contextual [values builder]
+(defn q-contextual [values builder]
   (fn [state updates context]
     ()))
 
-(defn def-nested [entities builder]
+(defn q-nested [entities builder]
   (fn [state updates context]
     ()))
 
-(defn q-value [value]
+(defn q-literal [value]
   (fn [state updates context]
     (assoc state :value value)))
 
 (defn example-internal [x y]
-  (def-internal {:x x :y y}
-    (fn [values] (str (:x values) (:y values)))))
+  (q-internal {:x x :y y}
+              (fn [values] (str (:x values) (:y values)))))
 
 (defn example-contextual [a]
-  (def-contextual {:x 1}
-    (str (example-internal 1 2) a)))
+  (q-contextual {:x 1}
+                (str (example-internal 1 2) a)))
 
 (defn example-nested [f g]
-  (def-nested {:a (example-internal 1 2)
-               :b (example-contextual "test")}
-    (fn [values] (str (:a values) (:b values)))))
+  (q-nested {:a (example-internal 1 2)
+             :b (example-contextual "test")}
+            (fn [values] (str (:a values) (:b values)))))
