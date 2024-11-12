@@ -101,16 +101,3 @@
   ^{::type ::literal}
   (fn [state updates context queue-update]
     (assoc state :value value)))
-
-(defn example-internal [x y]
-  (q-internal {:x x :y y}
-              (fn [values] (str (:x values) (:y values)))))
-
-(defn example-contextual [a]
-  (q-contextual {:x 1}
-                (str (example-internal 1 2) a)))
-
-(defn example-nested [f g]
-  (q-nested {:a (example-internal 1 2)
-             :b (example-contextual "test")}
-            (fn [values] (str (:a values) (:b values)))))
