@@ -2,6 +2,7 @@
   (:require [state :refer [cursor]]))
 
 (defn q-internal [initial builder]
+  ^{::type ::internal}
   (fn [state updates context queue-update]
     (let [internal (merge-maps initial ;; Override the defaults with the current state
                                (:internal state)
@@ -20,6 +21,7 @@
   ...)
 
 (defn q-contextual [values entity]
+  ^{::type ::contextual}
   (fn [state updates context queue-update]
     (entity state
             updates
@@ -27,6 +29,7 @@
             queue-update)))
 
 (defn q-consume [keys builder]
+  ^{::type ::consume}
   (fn [state updates context queue-update]
     (let [values (into {} (map (fn [key] [key (context key)]) keys))]
       (update ((builder values) state
@@ -37,6 +40,7 @@
               (fn [contextual] (merge-maps (or contextual {}) values))))))
 
 (defn q-nested [entities builder]
+  ^{::type ::nested}
   (fn [state updates context queue-update]
     ()))
 
@@ -49,6 +53,7 @@
 
   (fn [&arguments]
     ;; Pruning could be done at this point if needed
+    ^{::type ::entity}
     (fn [state updates context queue-update]
       ((apply builder arguments) (assoc state :arguments arguments)
                                  updates
@@ -56,6 +61,7 @@
                                  queue-update))))
 
 (defn q-literal [value]
+  ^{::type ::literal}
   (fn [state updates context queue-update]
     (assoc state :value value)))
 
