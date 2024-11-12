@@ -67,20 +67,31 @@
 
   ((:handle (c "f")) "f"))
 
-(defn q-internal [values builder]
-  (fn [state updates context]
-    ()))
+(defn q-internal [initial builder]
+  (fn [state updates context queue-update]
+    (let [internal (merge-maps (:internal state)
+                               initial
+                               (or (get [] updates) {}))
+          wrapped-internal (map-vals internal
+                                     (partial wrap-internal queue-update))]
+      ((builder internal) (assoc state :internal internal) updates context queue-update))))
+
+(defn merge-maps [&maps]
+  ...)
+
+(defn wrap-internal [queue-update value]
+  ...)
 
 (defn q-contextual [values builder]
-  (fn [state updates context]
+  (fn [state updates context queue-update]
     ()))
 
 (defn q-nested [entities builder]
-  (fn [state updates context]
+  (fn [state updates context queue-update]
     ()))
 
 (defn q-literal [value]
-  (fn [state updates context]
+  (fn [state updates context queue-update]
     (assoc state :value value)))
 
 (defn example-internal [x y]
