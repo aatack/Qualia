@@ -79,6 +79,10 @@
   (fn [state updates context]
     ()))
 
+(defn q-value [value]
+  (fn [state updates context]
+    (assoc state :value value)))
+
 (defn example-internal [x y]
   (def-internal {:x x :y y}
     (fn [values] (str (:x values) (:y values)))))
