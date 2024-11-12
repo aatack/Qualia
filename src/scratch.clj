@@ -82,9 +82,12 @@
 (defn wrap-internal [queue-update value]
   ...)
 
-(defn q-contextual [values builder]
+(defn q-contextual [values entity]
   (fn [state updates context queue-update]
-    ()))
+    (entity state
+            updates
+            (merge-maps context values)
+            queue-update)))
 
 (defn q-nested [entities builder]
   (fn [state updates context queue-update]
