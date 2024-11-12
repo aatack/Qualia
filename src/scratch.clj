@@ -4,14 +4,16 @@
   ^{::type ::internal}
   (fn [state updates context queue-update]
     (let [internal (merge-maps initial (:internal state) (or (get [] updates) {}))
-          wrapped-internal (map-vals internal
-                                     (partial wrap-internal queue-update))]
+          wrapped-internal (->> internal
+                                (map (fn [[key value]]
+                                       [key (wrap-internal queue-update value)]))
+                                (into {}))]
       ((builder internal) (assoc state :internal internal)
                           updates
                           context
                           queue-update))))
 
-(defn merge-maps [&maps]
+(defn merge-maps [& maps]
   (reduce (fn [left right]
             (reduce (fn [acc [key value]]
                       (assoc acc key value))
@@ -19,8 +21,7 @@
                     right))
           maps))
 
-(defn wrap-internal [queue-update value]
-  ...)
+(defn wrap-internal [queue-update value])
 
 (defn q-contextual [values entity]
   ^{::type ::contextual}
@@ -71,8 +72,7 @@
 (defn filter-updates [updates key]
   (->> updates (filter (fn [[item-key _]] (= (first item-key) key))) (into {})))
 
-(defn wrap-queue-update [queue-update key]
-  ...)
+(defn wrap-queue-update [queue-update key])
 
 (defn q-entity [builder]
   ;; Consider tracking arguments in the ephemeral state and asserting that they are nil
