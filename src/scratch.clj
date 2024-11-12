@@ -3,9 +3,7 @@
 (defn q-internal [initial builder]
   ^{::type ::internal}
   (fn [state updates context queue-update]
-    (let [internal (merge-maps initial ;; Override the defaults with the current state
-                               (:internal state)
-                               (or (get [] updates) {}))
+    (let [internal (merge-maps initial (:internal state) (or (get [] updates) {}))
           wrapped-internal (map-vals internal
                                      (partial wrap-internal queue-update))]
       ((builder internal) (assoc state :internal internal)
@@ -36,10 +34,7 @@
   ^{::type ::consume}
   (fn [state updates context queue-update]
     (let [values (into {} (map (fn [key] [key (context key)]) keys))]
-      (update ((builder values) state
-                                updates
-                                context
-                                queue-update)
+      (update ((builder values) state updates context queue-update)
               :contextual
               (fn [contextual] (merge-maps (or contextual {}) values))))))
 
