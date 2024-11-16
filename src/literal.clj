@@ -2,5 +2,5 @@
 
 (defn q-literal [value]
   ^{::type ::literal}
-  (fn [state updates context queue-update]
+  (fn [state _ _ _]
     (assoc state :value value)))
