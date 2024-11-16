@@ -1,28 +1,5 @@
 (ns scratch)
 
-(defn q-internal [initial builder]
-  ^{::type ::internal}
-  (fn [state updates context queue-update]
-    (let [internal (merge-maps initial (:internal state) (or (get [] updates) {}))
-          wrapped-internal (->> internal
-                                (map (fn [[key value]]
-                                       [key (wrap-internal queue-update value)]))
-                                (into {}))]
-      ((builder internal) (assoc state :internal internal)
-                          updates
-                          context
-                          queue-update))))
-
-(defn merge-maps [& maps]
-  (reduce (fn [left right]
-            (reduce (fn [acc [key value]]
-                      (assoc acc key value))
-                    left
-                    right))
-          maps))
-
-(defn wrap-internal [queue-update value])
-
 (defn q-contextual [values entity]
   ^{::type ::contextual}
   (fn [state updates context queue-update]
@@ -90,15 +67,10 @@
                                  context
                                  queue-update))))
 
-(defn q-literal [value]
-  ^{::type ::literal}
-  (fn [state updates context queue-update]
-    (assoc state :value value)))
-
 (comment
-  
+
   (assert (= {:value 1} ((q-literal 1) {} {} {} (fn []))))
-  
+
   (assert
    (= {:value 1 :internal {:x 1}}
       ((q-internal {:x 1} (fn [values] (q-literal (:x values))))
