@@ -20,3 +20,11 @@
                                           updates
                                           {}
                                           (build-queue-update runner))))))
+
+(defn deref-runner! [runner limit]
+  (loop [tries 0]
+    (if (or (and (:value @(:state runner)) (= 0 (count @(:updates runner))))
+            (> tries limit))
+      (:value @(:state runner))
+      (do (flush-runner! runner)
+          (recur (inc tries))))))
