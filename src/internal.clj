@@ -6,6 +6,9 @@
   clojure.lang.IDeref
   (deref [_] value))
 
+(defn q-swap [item function]
+  ((:function item) (:path item) (:key item) function))
+
 (defn q-internal [initial builder]
   ^{::type ::internal}
   (fn [state updates context queue-update]
