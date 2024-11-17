@@ -3,7 +3,9 @@
 (defn q-literal [value]
   ^{::type ::literal}
   (fn [state _ _ _]
-    (assoc state :value value)))
+    (-> state
+        (assoc :value value)
+        (dissoc :contextual))))
 
 (comment
 
