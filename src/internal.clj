@@ -43,10 +43,10 @@
 
   (assert ;; Dereferencing internal state works
    (= {:value 1 :internal {:x 1}}
-      ((q-internal {:x 1} (fn [values] (q-literal @(:x values))))
+      ((q-internal {:x 1} (fn [internal] (q-literal @(:x internal))))
        {} {} {} (fn []))))
 
   (assert ;; Updates are applied in the correct order, and make it through to the values
    (= {:value 4 :internal {:x 4}}
-      ((q-internal {:x 2} (fn [values] (q-literal @(:x values))))
+      ((q-internal {:x 2} (fn [internal] (q-literal @(:x internal))))
        {:internal {:x 1}} {() {:x [inc (partial * 2)]}} {} (fn [])))))

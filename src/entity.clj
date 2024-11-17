@@ -29,16 +29,14 @@
      (fn [x y]
        (q-internal
         {:x x :y y}
-        (fn [values]
+        (fn [internal]
           (q-consume
            [:a]
            (fn [consumed]
              (q-literal
-              (str @(:x values)
-                   ", "
-                   @(:y values)
-                   ", "
-                   (or (:a consumed) "_"))))))))))
+              (str @(:x internal)
+                   ", " @(:y internal)
+                   ", " (or (:a consumed) "_"))))))))))
 
   (assert ;; Basic entity rendering works as intended
    (= {:arguments '(1 2)
@@ -66,4 +64,14 @@
        :renders 2}
       (-> {}
           ((example 1 2) {} {} (fn []))
-          ((example 1 2) {() {:x [inc] :y [dec]}} {} (fn []))))))
+          ((example 1 2) {() {:x [inc] :y [dec]}} {} (fn [])))))
+
+  (assert ;; Rendering with context changes correctly updates the state
+   (= {:arguments '(1 2)
+       :internal {:x 1 :y 2}
+       :value "1, 2, 5"
+       :contextual {:a 5}
+       :renders 2}
+      (-> {}
+          ((example 1 2) {} {} (fn []))
+          ((example 1 2) {} {:a 5} (fn []))))))
