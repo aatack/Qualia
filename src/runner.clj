@@ -28,3 +28,29 @@
       (:value @(:state runner))
       (do (flush-runner! runner)
           (recur (inc tries))))))
+
+
+(comment
+  (require '[builders.literal :refer [q-literal]]
+           '[builders.internal :refer [q-internal q-swap]]
+           '[builders.entity :refer [q-entity]])
+
+  (def counter
+    (q-entity (fn []
+                (q-internal {:count 0}
+                            (fn [internal]
+                              (q-literal
+                               {:count @(:count internal)
+                                :inc (fn [] (q-swap (:count internal) inc))}))))))
+
+  (let [runner (build-runner (counter))]
+
+    ;; The entity should initialise automatically
+    (assert (= 0 (:count (deref-runner! runner 10))))
+
+    ;; Flushing/dereferencing the runner when there are no changes should have no effect
+    (assert (= 0 (:count (deref-runner! runner 10))))
+
+    ;; Incrementing the counter should correctly update the state
+    ((:inc (deref-runner! runner 10)))
+    (assert (= 1 (:count (deref-runner! runner 10))))))
