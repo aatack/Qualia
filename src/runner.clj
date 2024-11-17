@@ -61,7 +61,7 @@
                                (fn [nested] (q-literal (:a nested)))))))
 
   (let [runner (build-runner (nested-counter))]
-    ;; Calling a state update multiple times without flushing should still yield vald
+    ;; Calling a state update multiple times without flushing should still yield valid
     ;; results
     (let [increment (:inc (deref-runner! runner 10))]
       (increment)
@@ -69,4 +69,18 @@
       (increment))
 
     ;; Internal updates still work on nested entities
-    (assert (= 3 (:count (deref-runner! runner 10))))))
+    (assert (= 3 (:count (deref-runner! runner 10)))))
+
+  (def doubly-nested-counter
+    (q-entity (fn [] (q-nested {:b (nested-counter)}
+                               (fn [nested] (q-literal (:b nested)))))))
+
+  (let [runner (build-runner (doubly-nested-counter))]
+    ;; Calling a state update multiple times without flushing should still yield valid
+    ;; results
+    (let [increment (:inc (deref-runner! runner 10))]
+      (increment)
+      (increment))
+
+    ;; Internal updates still work on *doubly* nested entities
+    (assert (= 2 (:count (deref-runner! runner 10))))))
