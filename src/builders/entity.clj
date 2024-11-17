@@ -4,12 +4,12 @@
   (fn [& arguments]
     ^{::type ::entity}
     (fn [state updates context queue-update]
-      (let [arguments-changed? (not= arguments (:arguments state))
+      (let [arguments-changed? (not= (or arguments ()) (:arguments state))
             has-updates? (> (count updates) 0)
             context-changed? (->> (or (:contextual state) {})
                                   (some (fn [[key value]] (not= (context key) value))))]
         (if (or arguments-changed? has-updates? context-changed?)
-          (-> ((apply builder arguments) (assoc state :arguments arguments)
+          (-> ((apply builder arguments) (assoc state :arguments (or arguments []))
                                          updates
                                          context
                                          queue-update)
@@ -95,4 +95,8 @@
        :renders 2} ;; Should only render once since the second render has no changes
       (-> {}
           ((example 1 2) {} {} (fn []))
-          ((example 2 2) {} {} (fn []))))))
+          ((example 2 2) {} {} (fn [])))))
+
+  (assert ;; Zero-argument entities render correctly
+   (= {:arguments () :value 8 :renders 1}
+      (((q-entity (fn [] (q-literal 8)))) {} {} {} (fn [])))))
