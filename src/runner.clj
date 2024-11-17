@@ -83,4 +83,20 @@
       (increment))
 
     ;; Internal updates still work on *doubly* nested entities
-    (assert (= 2 (:count (deref-runner! runner 10))))))
+    (assert (= 2 (:count (deref-runner! runner 10)))))
+
+  (def broken-counter
+    (q-entity (fn []
+                (q-internal {:count 0}
+                            (fn [internal]
+                              (q-literal
+                               {:count @(:count internal)
+                                ;; The swap is not wrapped in its own function and is
+                                ;; therefore called in the render function, potentially
+                                ;; causing an infinite loop
+                                :inc (q-swap (:count internal) inc)}))))))
+
+  (let [runner (build-runner (broken-counter))]
+
+    ;; After cycling ten times, the limit should kick in and prevent an infinite loop
+    (assert (= 10 (:count (deref-runner! runner 10))))))
