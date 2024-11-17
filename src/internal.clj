@@ -6,18 +6,18 @@
   clojure.lang.IDeref
   (deref [_] value))
 
-
-(defn wrap-internal [queue-update value])
-
 (defn q-internal [initial builder]
   ^{::type ::internal}
   (fn [state updates context queue-update]
     (let [internal (merge-maps initial (:internal state) (or (get [] updates) {}))
           wrapped-internal (->> internal
                                 (map (fn [[key value]]
-                                       [key (wrap-internal queue-update value)]))
+                                       [key (InternalKeyValue. (:function queue-update)
+                                                               (:path queue-update)
+                                                               key
+                                                               value)]))
                                 (into {}))]
-      ((builder internal) (assoc state :internal internal)
-                          updates
-                          context
-                          queue-update))))
+      ((builder wrapped-internal) (assoc state :internal internal)
+                                  updates
+                                  context
+                                  queue-update))))
