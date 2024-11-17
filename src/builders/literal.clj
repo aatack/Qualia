@@ -1,4 +1,4 @@
-(ns literal)
+(ns builders.literal)
 
 (defn q-literal [value]
   ^{::type ::literal}

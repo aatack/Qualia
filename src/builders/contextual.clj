@@ -1,4 +1,4 @@
-(ns contextual
+(ns builders.contextual
   (:require
    [helpers :refer [merge-maps]]))
 
@@ -19,7 +19,7 @@
               (fn [current] (merge-maps (or current {}) values))))))
 
 (comment
-  (require '[literal :refer [q-literal]])
+  (require '[builders.literal :refer [q-literal]])
 
   (assert ;; Provided values are consumed correctly, and reported
    (= {:contextual {:x 1} :value 1}

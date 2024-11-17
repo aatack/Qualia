@@ -1,7 +1,7 @@
 (ns scratch
   (:require
-   [internal :refer [q-internal]]
-   [literal :refer [q-literal]]))
+   [builders.internal :refer [q-internal]]
+   [builders.literal :refer [q-literal]]))
 
 (comment
 

@@ -1,4 +1,4 @@
-(ns internal
+(ns builders.internal
   (:require
    [helpers :refer [merge-maps]]))
 
@@ -29,7 +29,7 @@
                                   queue-update))))
 
 (comment
-  (require '[literal :refer [q-literal]])
+  (require '[builders.literal :refer [q-literal]])
 
   (assert ;; New values are initialised properly
    (= {:value 1 :internal {:x 1}}

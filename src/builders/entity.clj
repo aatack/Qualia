@@ -1,4 +1,4 @@
-(ns entity)
+(ns builders.entity)
 
 (defn q-entity [builder]
   (fn [& arguments]
@@ -20,9 +20,9 @@
           state)))))
 
 (comment
-  (require '[literal :refer [q-literal]]
-           '[internal :refer [q-internal]]
-           '[contextual :refer [q-consume]])
+  (require '[builders.literal :refer [q-literal]]
+           '[builders.internal :refer [q-internal]]
+           '[builders.contextual :refer [q-consume]])
 
   (def example
     (q-entity
