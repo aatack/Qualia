@@ -17,9 +17,6 @@
   (swap [_ f x y]
     (function path key (partial f x y))))
 
-(defn q-wrap [queue-update key]
-  (update queue-update :path conj key))
-
 (defn q-internal [initial builder]
   ^{::type ::internal}
   (fn [state updates context queue-update]

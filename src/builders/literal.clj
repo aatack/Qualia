@@ -3,10 +3,7 @@
 (defn q-literal [value]
   ^{::type ::literal}
   (fn [state _ _ _]
-    (-> state
-        (assoc :value value)
-        (dissoc :contextual)
-        (dissoc :nested))))
+    (-> state (assoc :value value) (dissoc :contextual) (dissoc :nested))))
 
 (comment
   (require '[helpers :refer [void-update]])

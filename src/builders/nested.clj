@@ -1,6 +1,5 @@
 (ns builders.nested
   (:require
-   [builders.internal :refer [q-wrap]]
    [helpers :refer [map-keys map-vals merge-maps strip-nils]]))
 
 (defn- filter-updates [updates key]
@@ -13,26 +12,19 @@
   ^{::type ::nested}
   (fn [state updates context queue-update]
     (let [updated-entities
-          (into {}
-                (map (fn [[key entity]]
-                       [key (entity (or (-> state :nested (get key)) {})
-                                    (filter-updates updates key)
-                                    context
-                                    (q-wrap queue-update key))])
-                     entities))
+          (into {} (map (fn [[key entity]]
+                          [key (entity (or (-> state :nested (get key)) {})
+                                       (filter-updates updates key)
+                                       context
+                                       (update queue-update :path conj key))])
+                        entities))
 
           resulting-state
           ((builder (map-vals :value updated-entities))
            (update state
                    :nested
-                   (fn [current]
-                     (reduce dissoc
-                             current
-                             (keys updated-entities))))
-           (into {}
-                 (filter (fn [[key _]]
-                           (not (updated-entities key)))
-                         updates))
+                   (fn [current] (reduce dissoc current (keys updated-entities))))
+           (into {} (filter (fn [[key _]] (not (updated-entities key))) updates))
            context
            queue-update)]
       (-> resulting-state

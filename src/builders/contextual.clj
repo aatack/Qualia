@@ -5,10 +5,7 @@
 (defn q-provide [values entity]
   ^{::type ::contextual}
   (fn [state updates context queue-update]
-    (-> (entity state
-                updates
-                (merge-maps context values)
-                queue-update)
+    (-> (entity state updates (merge-maps context values) queue-update)
         ;; No longer depend on any keys that are provided by this builder
         (update :contextual (fn [current]
                               (reduce dissoc current (keys values)))))))
