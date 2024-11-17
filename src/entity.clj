@@ -74,4 +74,25 @@
        :renders 2}
       (-> {}
           ((example 1 2) {} {} (fn []))
-          ((example 1 2) {} {:a 5} (fn []))))))
+          ((example 1 2) {} {:a 5} (fn [])))))
+
+  (assert ;; Setting a contextual value to the same value it was before does not render
+   (= {:arguments '(1 2)
+       :internal {:x 1 :y 2}
+       :value "1, 2, 5"
+       :contextual {:a 5}
+       :renders 2}
+      (-> {}
+          ((example 1 2) {} {} (fn []))
+          ((example 1 2) {} {:a 5} (fn []))
+          ((example 1 2) {} {:a 5} (fn [])))))
+
+  (assert ;; Rendering with changes to the arguments should update the state
+   (= {:arguments '(2 2)
+       :internal {:x 1 :y 2}
+       :value "1, 2, _"
+       :contextual {:a nil}
+       :renders 2} ;; Should only render once since the second render has no changes
+      (-> {}
+          ((example 1 2) {} {} (fn []))
+          ((example 2 2) {} {} (fn []))))))
