@@ -15,3 +15,19 @@
                                  updates
                                  context
                                  queue-update))))
+
+(comment
+  (require '[literal :refer [q-literal]]
+           '[internal :refer [q-internal]])
+
+  (assert ;; Basic entity rendering works as intended
+   (= {:arguments '(1 2)
+       :internal {:x 1 :y 2}
+       :value "1, 2"}
+      (let [example
+            (q-entity
+             (fn [x y]
+               (q-internal
+                {:x x :y y}
+                (fn [values] (q-literal (str @(:x values) ", " @(:y values)))))))]
+        ((example 1 2) {} {} {} (fn []))))))
