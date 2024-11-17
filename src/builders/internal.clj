@@ -8,8 +8,14 @@
   (deref [_] value)
 
   IAtom
+  (reset [_ v]
+    (function path key (constantly v)))
   (swap [_ f]
-    (function path key f)))
+    (function path key f))
+  (swap [_ f x]
+    (function path key (partial f x)))
+  (swap [_ f x y]
+    (function path key (partial f x y))))
 
 (defn q-swap [item function]
   ((.function item) (.path item) (.key item) function))
