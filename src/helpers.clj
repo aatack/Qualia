@@ -24,3 +24,8 @@
 (defn log [value]
   (println value)
   value)
+
+(def void-update
+  {:path []
+   :function (fn [path key function]
+               (log {:path path :key key :function function}))})

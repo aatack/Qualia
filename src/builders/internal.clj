@@ -7,7 +7,10 @@
   (deref [_] value))
 
 (defn q-swap [item function]
-  ((:function item) (:path item) (:key item) function))
+  ((.function item) (.path item) (.key item) function))
+
+(defn q-wrap [queue-update key]
+  (update queue-update :path conj key))
 
 (defn q-internal [initial builder]
   ^{::type ::internal}
@@ -29,24 +32,26 @@
                                   queue-update))))
 
 (comment
-  (require '[builders.literal :refer [q-literal]])
+  #_{:clj-kondo/ignore [:duplicate-require]}
+  (require '[builders.literal :refer [q-literal]]
+           '[helpers :refer [void-update]])
 
   (assert ;; New values are initialised properly
    (= {:value 1 :internal {:x 1}}
       ((q-internal {:x 1} (fn [_] (q-literal 1)))
-       {} {} {} (fn []))))
+       {} {} {} void-update)))
 
   (assert ;; Already-existing values are not overridden by the initial values
    (= {:value 1 :internal {:x 1}}
       ((q-internal {:x 2} (fn [_] (q-literal 1)))
-       {:internal {:x 1}} {} {} (fn []))))
+       {:internal {:x 1}} {} {} void-update)))
 
   (assert ;; Dereferencing internal state works
    (= {:value 1 :internal {:x 1}}
       ((q-internal {:x 1} (fn [internal] (q-literal @(:x internal))))
-       {} {} {} (fn []))))
+       {} {} {} void-update)))
 
   (assert ;; Updates are applied in the correct order, and make it through to the values
    (= {:value 4 :internal {:x 4}}
       ((q-internal {:x 2} (fn [internal] (q-literal @(:x internal))))
-       {:internal {:x 1}} {() {:x [inc (partial * 2)]}} {} (fn [])))))
+       {:internal {:x 1}} {() {:x [inc (partial * 2)]}} {} void-update))))

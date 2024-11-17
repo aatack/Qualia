@@ -22,15 +22,17 @@
               (fn [current] (merge-maps (or current {}) values))))))
 
 (comment
+  #_{:clj-kondo/ignore [:duplicate-require]}
   (require '[builders.literal :refer [q-literal]]
-           '[builders.entity :refer [q-entity]])
+           '[builders.entity :refer [q-entity]]
+           '[helpers :refer [void-update]])
 
   (assert ;; Provided values are consumed correctly, and reported
-   (= {:contextual {:x 1} :value 1}
+   (= {:contextual {} :value 1}
       ((q-provide
         {:x 1}
         (q-consume [:x] (fn [values] (q-literal (:x values)))))
-       {} {} {} (fn []))))
+       {} {} {} void-update)))
 
   (def switch-consumption
     (q-entity (fn [on?]
@@ -40,8 +42,8 @@
   (assert ;; Changing the consumed key correctly updates the map of dependencies
    (= {:arguments '(false), :value 2, :contextual {:right 2}, :renders 2}
       (-> {}
-          ((switch-consumption true) {} {:left 1 :right 2 :other 3} (fn []))
-          ((switch-consumption false) {} {:left 1 :right 2 :other 3} (fn [])))))
+          ((switch-consumption true) {} {:left 1 :right 2 :other 3} void-update)
+          ((switch-consumption false) {} {:left 1 :right 2 :other 3} void-update))))
 
   (def nested-contexts
     (q-provide {:a 1}
@@ -49,4 +51,4 @@
 
   (assert ;; Entities do not report dependencies on keys they provide
    (= {:value 1 :contextual {:b 5}}
-      (nested-contexts {} {} {:b 5} (fn [])))))
+      (nested-contexts {} {} {:b 5} void-update))))

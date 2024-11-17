@@ -22,7 +22,8 @@
 (comment
   (require '[builders.literal :refer [q-literal]]
            '[builders.internal :refer [q-internal]]
-           '[builders.contextual :refer [q-consume]])
+           '[builders.contextual :refer [q-consume]]
+           '[helpers :refer [void-update]])
 
   (def example
     (q-entity
@@ -44,7 +45,7 @@
        :value "1, 2, _"
        :contextual {:a nil}
        :renders 1}
-      ((example 1 2) {} {} {} (fn []))))
+      ((example 1 2) {} {} {} void-update)))
 
   (assert ;; Rendering multiple times with no updates does not change the state
    (= {:arguments '(1 2)
@@ -53,8 +54,8 @@
        :contextual {:a nil}
        :renders 1} ;; Should only render once since the second render has no changes
       (-> {}
-          ((example 1 2) {} {} (fn []))
-          ((example 1 2) {} {} (fn [])))))
+          ((example 1 2) {} {} void-update)
+          ((example 1 2) {} {} void-update))))
 
   (assert ;; Rendering with updates correctly propagates changes to the internal state
    (= {:arguments '(1 2)
@@ -63,8 +64,8 @@
        :contextual {:a nil}
        :renders 2}
       (-> {}
-          ((example 1 2) {} {} (fn []))
-          ((example 1 2) {() {:x [inc] :y [dec]}} {} (fn [])))))
+          ((example 1 2) {} {} void-update)
+          ((example 1 2) {() {:x [inc] :y [dec]}} {} void-update))))
 
   (assert ;; Rendering with context changes correctly updates the state
    (= {:arguments '(1 2)
@@ -73,8 +74,8 @@
        :contextual {:a 5}
        :renders 2}
       (-> {}
-          ((example 1 2) {} {} (fn []))
-          ((example 1 2) {} {:a 5} (fn [])))))
+          ((example 1 2) {} {} void-update)
+          ((example 1 2) {} {:a 5} void-update))))
 
   (assert ;; Setting a contextual value to the same value it was before does not render
    (= {:arguments '(1 2)
@@ -83,9 +84,9 @@
        :contextual {:a 5}
        :renders 2}
       (-> {}
-          ((example 1 2) {} {} (fn []))
-          ((example 1 2) {} {:a 5} (fn []))
-          ((example 1 2) {} {:a 5} (fn [])))))
+          ((example 1 2) {} {} void-update)
+          ((example 1 2) {} {:a 5} void-update)
+          ((example 1 2) {} {:a 5} void-update))))
 
   (assert ;; Rendering with changes to the arguments should update the state
    (= {:arguments '(2 2)
@@ -94,9 +95,9 @@
        :contextual {:a nil}
        :renders 2} ;; Should only render once since the second render has no changes
       (-> {}
-          ((example 1 2) {} {} (fn []))
-          ((example 2 2) {} {} (fn [])))))
+          ((example 1 2) {} {} void-update)
+          ((example 2 2) {} {} void-update))))
 
   (assert ;; Zero-argument entities render correctly
    (= {:arguments () :value 8 :renders 1}
-      (((q-entity (fn [] (q-literal 8)))) {} {} {} (fn [])))))
+      (((q-entity (fn [] (q-literal 8)))) {} {} {} void-update))))

@@ -1,8 +1,7 @@
 (ns builders.nested
   (:require
+   [builders.internal :refer [q-wrap]]
    [helpers :refer [map-keys map-vals merge-maps strip-nils]]))
-
-(defn- wrap-queue-update [queue-update key])
 
 (defn- filter-updates [updates key]
   (->> updates
@@ -19,7 +18,7 @@
                        [key (entity (or (-> state :nested (get key)) {})
                                     (filter-updates updates key)
                                     context
-                                    (wrap-queue-update queue-update key))])
+                                    (q-wrap queue-update key))])
                      entities))
 
           resulting-state
@@ -45,16 +44,18 @@
           strip-nils))))
 
 (comment
+  #_{:clj-kondo/ignore [:duplicate-require]}
   (require '[builders.literal :refer [q-literal]]
            '[builders.internal :refer [q-internal]]
            '[builders.entity :refer [q-entity]]
-           '[builders.contextual :refer [q-consume q-provide]])
+           '[builders.contextual :refer [q-consume q-provide]]
+           '[helpers :refer [void-update]])
 
   (assert ;; The most basic possible nested values return correctly
    (= {:nested {:left {:value "left"} :right {:value "right"}} :value "left right"}
       ((q-nested {:left (q-literal "left") :right (q-literal "right")}
                  (fn [nested] (q-literal (str (:left nested) " " (:right nested)))))
-       {} {} {} (fn []))))
+       {} {} {} void-update)))
 
   (def nested-internal
     (q-nested {:left (q-internal {:x 1} (fn [internal]
@@ -68,8 +69,8 @@
                 :right {:internal {:x 5} :value " = 5"}}
        :value "2 = 5"}
       (-> {}
-          (nested-internal {} {} (fn []))
-          (nested-internal {'(:left) {:x [inc]}} {} (fn [])))))
+          (nested-internal {} {} void-update)
+          (nested-internal {'(:left) {:x [inc]}} {} void-update))))
 
   (def nested-entity
     (let [entity (q-entity
@@ -90,8 +91,8 @@
         :right {:arguments '(5) :internal {:x 5} :value 5 :renders 1}}
        :value "2 = 5"}
       (-> {}
-          (nested-entity {} {} (fn []))
-          (nested-entity {'(:left) {:x [inc]}} {} (fn [])))))
+          (nested-entity {} {} void-update)
+          (nested-entity {'(:left) {:x [inc]}} {} void-update))))
 
   (def nested-contextual
     (let [entity (q-entity
@@ -109,7 +110,7 @@
         :right {:arguments '(:b) :value 8 :contextual {:b 8} :renders 1}}
        :value "5 8"
        :contextual {}}
-      (nested-contextual {} {} {} (fn []))))
+      (nested-contextual {} {} {} void-update)))
 
   (def nested-contextual-entity
     (let [entity (q-entity
@@ -126,8 +127,8 @@
        :value "42 8"
        :contextual {:a 42 :b 8}}
       (-> {}
-          (nested-contextual-entity {} {:a 5 :b 8} (fn []))
-          (nested-contextual-entity {} {:a 42 :b 8} (fn [])))))
+          (nested-contextual-entity {} {:a 5 :b 8} void-update)
+          (nested-contextual-entity {} {:a 42 :b 8} void-update))))
 
   (def child
     (q-entity
@@ -148,17 +149,17 @@
   (assert ;; Nested entities that are no longer used should be removed from the state
    (= [:a :b :f]
       (-> {}
-          ((grandparent [:a :b :c] [:x :y :z]) {} {} (fn []))
-          ((grandparent [:a :b :f] [:x :y :z]) {} {} (fn []))
+          ((grandparent [:a :b :c] [:x :y :z]) {} {} void-update)
+          ((grandparent [:a :b :f] [:x :y :z]) {} {} void-update)
           :nested :left :nested keys sort)))
 
   (let [result
         (-> {}
-            ((grandparent [:a :b :c] [:x :y :z]) {} {} (fn []))
+            ((grandparent [:a :b :c] [:x :y :z]) {} {} void-update)
             ((grandparent [:a :b :c] [:x :y :z])
-             {'(:left :a) {:count [inc]}} {} (fn []))
+             {'(:left :a) {:count [inc]}} {} void-update)
             ((grandparent [:a :b :c] [:x :y :z])
-             {'(:left :a) {:count [inc]}} {} (fn [])))]
+             {'(:left :a) {:count [inc]}} {} void-update))]
 
     (assert ;; The entity whose state was updated has been rendered thrice now
      (= 3
@@ -169,7 +170,7 @@
      (= 1
         (-> result :nested :right :renders)
         (-> result :nested :left :nested :b :renders)))
-    
+
     (assert ;; The value has been updated correctly
      (= {:left {:a 2 :b 0 :c 0} :right {:x 0 :y 0 :z 0}}
         (:value result)))))
