@@ -16,4 +16,14 @@
     (let [values (into {} (map (fn [key] [key (context key)]) keys))]
       (update ((builder values) state updates context queue-update)
               :contextual
-              (fn [contextual] (merge-maps (or contextual {}) values))))))
+              (fn [current] (merge-maps (or current {}) values))))))
+
+(comment
+  (require '[literal :refer [q-literal]])
+
+  (assert ;; Provided values are consumed correctly, and reported
+   (= {:contextual {:x 1} :value 1}
+      ((q-provide
+        {:x 1}
+        (q-consume [:x] (fn [values] (q-literal (:x values)))))
+       {} {} {} (fn [])))))
