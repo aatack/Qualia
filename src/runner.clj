@@ -33,7 +33,8 @@
 (comment
   (require '[builders.literal :refer [q-literal]]
            '[builders.internal :refer [q-internal q-swap]]
-           '[builders.entity :refer [q-entity]])
+           '[builders.entity :refer [q-entity]]
+           '[builders.nested :refer [q-nested]])
 
   (def counter
     (q-entity (fn []
@@ -53,4 +54,19 @@
 
     ;; Incrementing the counter should correctly update the state
     ((:inc (deref-runner! runner 10)))
-    (assert (= 1 (:count (deref-runner! runner 10))))))
+    (assert (= 1 (:count (deref-runner! runner 10)))))
+
+  (def nested-counter
+    (q-entity (fn [] (q-nested {:a (counter)}
+                               (fn [nested] (q-literal (:a nested)))))))
+
+  (let [runner (build-runner (nested-counter))]
+    ;; Calling a state update multiple times without flushing should still yield vald
+    ;; results
+    (let [increment (:inc (deref-runner! runner 10))]
+      (increment)
+      (increment)
+      (increment))
+
+    ;; Internal updates still work on nested entities
+    (assert (= 3 (:count (deref-runner! runner 10))))))
