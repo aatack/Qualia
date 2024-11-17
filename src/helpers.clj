@@ -8,9 +8,14 @@
                     right))
           maps))
 
-(defn map-vals [mapping function]
+(defn map-vals [function mapping]
   (->> mapping
        (map (fn [[key value]] [key (function value)]))
+       (into {})))
+
+(defn map-keys [function mapping]
+  (->> mapping
+       (map (fn [[key value]] [(function key) value]))
        (into {})))
 
 (defn log [value]
