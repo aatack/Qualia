@@ -1,10 +1,15 @@
 (ns builders.internal
   (:require
-   [helpers :refer [merge-maps]]))
+   [helpers :refer [merge-maps]])
+  (:import [clojure.lang IAtom]))
 
 (deftype InternalKeyValue [function path key value]
   clojure.lang.IDeref
-  (deref [_] value))
+  (deref [_] value)
+
+  IAtom
+  (swap [_ f]
+    (function path key f)))
 
 (defn q-swap [item function]
   ((.function item) (.path item) (.key item) function))
