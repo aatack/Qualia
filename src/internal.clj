@@ -2,6 +2,11 @@
   (:require
    [helpers :refer [merge-maps]]))
 
+(deftype InternalKeyValue [function path key value]
+  clojure.lang.IDeref
+  (deref [_] value))
+
+
 (defn wrap-internal [queue-update value])
 
 (defn q-internal [initial builder]
