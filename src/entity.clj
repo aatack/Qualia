@@ -5,8 +5,9 @@
     ^{::type ::entity}
     (fn [state updates context queue-update]
       (let [arguments-changed? (not= arguments (:arguments state))
-            has-updates? true
-            context-changed? true]
+            has-updates? (> (count updates) 0)
+            context-changed? (->> (or (:contextual state) {})
+                                  (some (fn [[key value]] (not= (context key) value))))]
         (if (or arguments-changed? has-updates? context-changed?)
           (-> ((apply builder arguments) (assoc state :arguments arguments)
                                          updates
@@ -40,7 +41,7 @@
    (= {:arguments '(1 2)
        :internal {:x 1 :y 2}
        :value "1, 2"
-       :renders 2}
+       :renders 1}
       (-> {}
           ((example 1 2) {} {} (fn []))
           ((example 1 2) {} {} (fn [])))))
