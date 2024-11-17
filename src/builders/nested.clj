@@ -1,6 +1,6 @@
 (ns builders.nested
   (:require
-   [helpers :refer [map-keys map-vals merge-maps]]))
+   [helpers :refer [map-keys map-vals merge-maps strip-nils]]))
 
 (defn- wrap-queue-update [queue-update key])
 
@@ -36,9 +36,13 @@
                          updates))
            context
            queue-update)]
-      (update resulting-state
-              :nested
-              (fn [current] (merge-maps current updated-entities))))))
+      (-> resulting-state
+          (update :nested
+                  (fn [current] (merge-maps current updated-entities)))
+          (update :contextual
+                  (fn [current] (apply merge-maps current
+                                       (map :contextual (vals updated-entities)))))
+          strip-nils))))
 
 (comment
   (require '[builders.literal :refer [q-literal]]
@@ -104,7 +108,7 @@
        {:left {:arguments '(:a) :value 5 :contextual {:a 5} :renders 1}
         :right {:arguments '(:b) :value 8 :contextual {:b 8} :renders 1}}
        :value "5 8"
-       :contextual nil}
+       :contextual {}}
       (nested-contextual {} {} {} (fn []))))
 
   (def nested-contextual-entity
@@ -120,7 +124,7 @@
        {:left {:arguments '(:a) :value 42 :contextual {:a 42} :renders 2}
         :right {:arguments '(:b) :value 8 :contextual {:b 8} :renders 1}}
        :value "42 8"
-       :contextual nil}
+       :contextual {:a 42 :b 8}}
       (-> {}
-          ((q-provide {:a 5 :b 8} nested-contextual-entity) {} {} (fn []))
-          ((q-provide {:a 42 :b 8} nested-contextual-entity) {} {} (fn []))))))
+          (nested-contextual-entity {} {:a 5 :b 8} (fn []))
+          (nested-contextual-entity {} {:a 42 :b 8} (fn []))))))

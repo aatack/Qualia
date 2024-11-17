@@ -18,6 +18,9 @@
        (map (fn [[key value]] [(function key) value]))
        (into {})))
 
+(defn strip-nils [mapping]
+  (into {} (filter (fn [[_ value]] value) mapping)))
+
 (defn log [value]
   (println value)
   value)
