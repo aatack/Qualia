@@ -32,7 +32,7 @@
 
 (comment
   (require '[builders.literal :refer [q-literal]]
-           '[builders.internal :refer [q-internal q-swap]]
+           '[builders.internal :refer [q-internal]]
            '[builders.entity :refer [q-entity]]
            '[builders.nested :refer [q-nested]])
 
@@ -42,7 +42,7 @@
                             (fn [internal]
                               (q-literal
                                {:count @(:count internal)
-                                :inc (fn [] (q-swap (:count internal) inc))}))))))
+                                :inc (fn [] (swap! (:count internal) inc))}))))))
 
   (let [runner (build-runner (counter))]
 
@@ -94,7 +94,7 @@
                                 ;; The swap is not wrapped in its own function and is
                                 ;; therefore called in the render function, potentially
                                 ;; causing an infinite loop
-                                :inc (q-swap (:count internal) inc)}))))))
+                                :inc (swap! (:count internal) inc)}))))))
 
   (let [runner (build-runner (broken-counter))]
 

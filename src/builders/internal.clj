@@ -17,9 +17,6 @@
   (swap [_ f x y]
     (function path key (partial f x y))))
 
-(defn q-swap [item function]
-  ((.function item) (.path item) (.key item) function))
-
 (defn q-wrap [queue-update key]
   (update queue-update :path conj key))
 
