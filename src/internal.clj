@@ -15,7 +15,7 @@
     (let [internal (reduce (fn [values [key functions]]
                              (update values key (apply comp (reverse functions))))
                            (merge-maps initial (:internal state))
-                           (or (get [] updates) {}))
+                           (or (get updates ()) {}))
           wrapped-internal (->> internal
                                 (map (fn [[key value]]
                                        [key (InternalKeyValue. (:function queue-update)
@@ -44,4 +44,9 @@
   (assert ;; Dereferencing internal state works
    (= {:value 1 :internal {:x 1}}
       ((q-internal {:x 1} (fn [values] (q-literal @(:x values))))
-       {} {} {} (fn [])))))
+       {} {} {} (fn []))))
+
+  (assert ;; Updates are applied in the correct order, and make it through to the values
+   (= {:value 4 :internal {:x 4}}
+      ((q-internal {:x 2} (fn [values] (q-literal @(:x values))))
+       {:internal {:x 1}} {() {:x [inc (partial * 2)]}} {} (fn [])))))
