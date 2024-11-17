@@ -33,5 +33,10 @@
 
   (assert ;; Check that new values are initialised properly
    (= {:value 1 :internal {:x 1}}
-      ((q-internal {:x 1} (fn [values] (q-literal @(:x values))))
-       {} {} {} (fn [])))))
+      ((q-internal {:x 1} (fn [values] (q-literal 1)))
+       {} {} {} (fn []))))
+  
+  (assert ;; Check that already-existing values are not overridden by the initial values
+   (= {:value 1 :internal {:x 1}}
+      ((q-internal {:x 2} (fn [values] (q-literal 1)))
+       {:internal {:x 1}} {} {} (fn [])))))
