@@ -43,7 +43,8 @@
 (comment
   (require '[builders.literal :refer [q-literal]]
            '[builders.internal :refer [q-internal]]
-           '[builders.entity :refer [q-entity]])
+           '[builders.entity :refer [q-entity]]
+           '[builders.contextual :refer [q-consume q-provide]])
 
   (assert ;; The most basic possible nested values return correctly
    (= {:nested {:left {:value "left"} :right {:value "right"}} :value "left right"}
@@ -78,7 +79,7 @@
 
   (assert ;; Prunes work correctly on internal updates within nested entities
    (= {:nested
-       ;; The left nested entity should be rendered twice, as it was updated; but the
+       ;; The left nested entity should be rendered twice as it was updated; but the
        ;; right nested entity should only be rendered once.  The second update doesn't
        ;; affect it
        {:left {:arguments '(1) :internal {:x 2} :value 2 :renders 2}
@@ -86,4 +87,40 @@
        :value "2 = 5"}
       (-> {}
           (nested-entity {} {} (fn []))
-          (nested-entity {'(:left) {:x [inc]}} {} (fn []))))))
+          (nested-entity {'(:left) {:x [inc]}} {} (fn [])))))
+
+  (def nested-contextual
+    (let [entity (q-entity
+                  (fn [key]
+                    (q-consume [key] (fn [consumed] (q-literal (key consumed))))))]
+      (q-provide
+       {:a 5 :b 8}
+       (q-nested
+        {:left (entity :a) :right (entity :b)}
+        (fn [nested] (q-literal (str (:left nested) " " (:right nested))))))))
+
+  (assert ;; Nested entities correctly consume provided values
+   (= {:nested
+       {:left {:arguments '(:a) :value 5 :contextual {:a 5} :renders 1}
+        :right {:arguments '(:b) :value 8 :contextual {:b 8} :renders 1}}
+       :value "5 8"
+       :contextual nil}
+      (nested-contextual {} {} {} (fn []))))
+
+  (def nested-contextual-entity
+    (let [entity (q-entity
+                  (fn [key]
+                    (q-consume [key] (fn [consumed] (q-literal (key consumed))))))]
+      (q-nested
+       {:left (entity :a) :right (entity :b)}
+       (fn [nested] (q-literal (str (:left nested) " " (:right nested)))))))
+
+  (assert ;; Nested entities are pruned when their consumed keys do not change
+   (= {:nested
+       {:left {:arguments '(:a) :value 42 :contextual {:a 42} :renders 2}
+        :right {:arguments '(:b) :value 8 :contextual {:b 8} :renders 1}}
+       :value "42 8"
+       :contextual nil}
+      (-> {}
+          ((q-provide {:a 5 :b 8} nested-contextual-entity) {} {} (fn []))
+          ((q-provide {:a 42 :b 8} nested-contextual-entity) {} {} (fn []))))))
