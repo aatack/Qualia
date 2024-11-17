@@ -23,7 +23,7 @@
 
 (defn deref-runner! [runner limit]
   (loop [tries 0]
-    (if (or (and (:value @(:state runner)) (= 0 (count @(:updates runner))))
+    (if (or (and (contains? @(:state runner) :value) (= 0 (count @(:updates runner))))
             (> tries limit))
       (:value @(:state runner))
       (do (flush-runner! runner)
