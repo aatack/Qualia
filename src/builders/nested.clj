@@ -127,4 +127,27 @@
        :contextual {:a 42 :b 8}}
       (-> {}
           (nested-contextual-entity {} {:a 5 :b 8} (fn []))
-          (nested-contextual-entity {} {:a 42 :b 8} (fn []))))))
+          (nested-contextual-entity {} {:a 42 :b 8} (fn [])))))
+
+  (def child
+    (q-entity
+     (fn []
+       (q-internal {:value 0}
+                   (fn [internal] (q-literal @(:value internal)))))))
+
+  (def parent
+    (q-entity
+     (fn [keys] (q-nested (->> keys (map (fn [key] [key (child)])) (into {}))
+                          q-literal))))
+
+  (def grandparent
+    (q-entity (fn [left right] (q-nested {:left (parent left)
+                                          :right (parent right)}
+                                         q-literal))))
+
+  (assert ;; Nested entities that are no longer used should be removed from the state
+   (= [:a :b :f]
+      (-> {}
+          ((grandparent [:a :b :c] [:x :y :z]) {} {} (fn []))
+          ((grandparent [:a :b :f] [:x :y :z]) {} {} (fn []))
+          :nested :left :nested keys sort))))

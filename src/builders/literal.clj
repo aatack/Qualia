@@ -5,7 +5,8 @@
   (fn [state _ _ _]
     (-> state
         (assoc :value value)
-        (dissoc :contextual))))
+        (dissoc :contextual)
+        (dissoc :nested))))
 
 (comment
 
