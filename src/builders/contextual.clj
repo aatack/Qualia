@@ -5,10 +5,13 @@
 (defn q-provide [values entity]
   ^{::type ::contextual}
   (fn [state updates context queue-update]
-    (entity state
-            updates
-            (merge-maps context values)
-            queue-update)))
+    (-> (entity state
+                updates
+                (merge-maps context values)
+                queue-update)
+        ;; No longer depend on any keys that are provided by this builder
+        (update :contextual (fn [current]
+                              (reduce dissoc current (keys values)))))))
 
 (defn q-consume [keys builder]
   ^{::type ::consume}
@@ -38,4 +41,12 @@
    (= {:arguments '(false), :value 2, :contextual {:right 2}, :renders 2}
       (-> {}
           ((switch-consumption true) {} {:left 1 :right 2 :other 3} (fn []))
-          ((switch-consumption false) {} {:left 1 :right 2 :other 3} (fn []))))))
+          ((switch-consumption false) {} {:left 1 :right 2 :other 3} (fn [])))))
+
+  (def nested-contexts
+    (q-provide {:a 1}
+               (q-consume [:a :b] (fn [context] (q-literal (:a context))))))
+
+  (assert ;; Entities do not report dependencies on keys they provide
+   (= {:value 1 :contextual {:b 5}}
+      (nested-contexts {} {} {:b 5} (fn [])))))
