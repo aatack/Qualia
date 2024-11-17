@@ -27,3 +27,11 @@
                                   updates
                                   context
                                   queue-update))))
+
+(comment
+  (require '[literal :refer [q-literal]])
+
+  (assert ;; Check that new values are initialised properly
+   (= {:value 1 :internal {:x 1}}
+      ((q-internal {:x 1} (fn [values] (q-literal @(:x values))))
+       {} {} {} (fn [])))))
