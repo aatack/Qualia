@@ -1,6 +1,6 @@
 (ns builders.nested
   (:require
-   [helpers :refer [merge-maps]]))
+   [helpers :refer [map-vals merge-maps]]))
 
 (defn- wrap-queue-update [queue-update key])
 
@@ -13,16 +13,16 @@
     (let [updated-entities
           (into {}
                 (map (fn [[key entity]]
-                       (entity (or (-> state :nested (get key)) {})
-                               (filter-updates updates key)
-                               context
-                               (wrap-queue-update queue-update key)))
+                       [key (entity (or (-> state :nested (get key)) {})
+                                    (filter-updates updates key)
+                                    context
+                                    (wrap-queue-update queue-update key))])
                      entities))
 
           resulting-state
-          ((builder updated-entities)
+          ((builder (map-vals updated-entities :value))
            (update state
-                   :internal
+                   :nested
                    (fn [current]
                      (reduce dissoc
                              current
@@ -34,5 +34,14 @@
            context
            queue-update)]
       (update resulting-state
-              :internal
+              :nested
               (fn [current] (merge-maps current updated-entities))))))
+
+(comment
+  (require '[builders.literal :refer [q-literal]])
+
+  (assert
+   (= {:nested {:left {:value "left"}, :right {:value "right"}}, :value "left right"}
+      ((q-nested {:left (q-literal "left") :right (q-literal "right")}
+                 (fn [nested] (q-literal (str (:left nested) " " (:right nested)))))
+       {} {} {} (fn [])))))

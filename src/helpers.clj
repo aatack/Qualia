@@ -7,3 +7,12 @@
                     left
                     right))
           maps))
+
+(defn map-vals [mapping function]
+  (->> mapping
+       (map (fn [[key value]] [key (function value)]))
+       (into {})))
+
+(defn log [value]
+  (println value)
+  value)
