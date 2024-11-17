@@ -132,8 +132,8 @@
   (def child
     (q-entity
      (fn []
-       (q-internal {:value 0}
-                   (fn [internal] (q-literal @(:value internal)))))))
+       (q-internal {:count 0}
+                   (fn [internal] (q-literal @(:count internal)))))))
 
   (def parent
     (q-entity
@@ -150,4 +150,26 @@
       (-> {}
           ((grandparent [:a :b :c] [:x :y :z]) {} {} (fn []))
           ((grandparent [:a :b :f] [:x :y :z]) {} {} (fn []))
-          :nested :left :nested keys sort))))
+          :nested :left :nested keys sort)))
+
+  (let [result
+        (-> {}
+            ((grandparent [:a :b :c] [:x :y :z]) {} {} (fn []))
+            ((grandparent [:a :b :c] [:x :y :z])
+             {'(:left :a) {:count [inc]}} {} (fn []))
+            ((grandparent [:a :b :c] [:x :y :z])
+             {'(:left :a) {:count [inc]}} {} (fn [])))]
+
+    (assert ;; The entity whose state was updated has been rendered thrice now
+     (= 3
+        (-> result :nested :left :renders)
+        (-> result :nested :left :nested :a :renders)))
+
+    (assert ;; Other entities have only been rendered once
+     (= 1
+        (-> result :nested :right :renders)
+        (-> result :nested :left :nested :b :renders)))
+    
+    (assert ;; The value has been updated correctly
+     (= {:left {:a 2 :b 0 :c 0} :right {:x 0 :y 0 :z 0}}
+        (:value result)))))

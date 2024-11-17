@@ -9,7 +9,7 @@
             context-changed? (->> (or (:contextual state) {})
                                   (some (fn [[key value]] (not= (context key) value))))]
         (if (or arguments-changed? has-updates? context-changed?)
-          (-> ((apply builder arguments) (assoc state :arguments (or arguments []))
+          (-> ((apply builder arguments) (assoc state :arguments (or arguments ()))
                                          updates
                                          context
                                          queue-update)
