@@ -7,8 +7,8 @@
 
 (comment
 
-  ;; Initial value is properly instantiated
+  ;; Initial values are properly instantiated
   (assert (= {:value 1} ((q-literal 1) {} {} {} (fn []))))
 
-  ;; New value is correctly updates
+  ;; New values are correctly updated
   (assert (= {:value 2} ((q-literal 2) {:value 1} {} {} (fn [])))))

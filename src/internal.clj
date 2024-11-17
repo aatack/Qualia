@@ -31,12 +31,17 @@
 (comment
   (require '[literal :refer [q-literal]])
 
-  (assert ;; Check that new values are initialised properly
+  (assert ;; New values are initialised properly
    (= {:value 1 :internal {:x 1}}
-      ((q-internal {:x 1} (fn [values] (q-literal 1)))
+      ((q-internal {:x 1} (fn [_] (q-literal 1)))
        {} {} {} (fn []))))
-  
-  (assert ;; Check that already-existing values are not overridden by the initial values
+
+  (assert ;; Already-existing values are not overridden by the initial values
    (= {:value 1 :internal {:x 1}}
-      ((q-internal {:x 2} (fn [values] (q-literal 1)))
-       {:internal {:x 1}} {} {} (fn [])))))
+      ((q-internal {:x 2} (fn [_] (q-literal 1)))
+       {:internal {:x 1}} {} {} (fn []))))
+
+  (assert ;; Dereferencing internal state works
+   (= {:value 1 :internal {:x 1}}
+      ((q-internal {:x 1} (fn [values] (q-literal @(:x values))))
+       {} {} {} (fn [])))))
