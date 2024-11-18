@@ -1,0 +1,2 @@
+{:lint-as {macros/defentity clojure.core/defn
+           macros/let-internal clojure.core/let}}

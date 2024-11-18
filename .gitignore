@@ -13,5 +13,6 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 .calva
-.clj-kondo/
+.clj-kondo/*
+!.clj-kondo/config.edn
 .lsp/
