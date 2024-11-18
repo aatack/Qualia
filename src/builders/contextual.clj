@@ -3,7 +3,7 @@
    [helpers :refer [merge-maps]]))
 
 (defn q-provide [values entity]
-  ^{::type ::contextual}
+  ^:qualia
   (fn [state updates context queue-update]
     (-> (entity state updates (merge-maps context values) queue-update)
         ;; No longer depend on any keys that are provided by this builder
@@ -11,7 +11,7 @@
                               (reduce dissoc current (keys values)))))))
 
 (defn q-consume [keys builder]
-  ^{::type ::consume}
+  ^:qualia
   (fn [state updates context queue-update]
     (let [values (into {} (map (fn [key] [key (context key)]) keys))]
       (update ((builder values) state updates context queue-update)

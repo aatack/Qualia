@@ -9,7 +9,7 @@
        (into {})))
 
 (defn q-nested [entities builder]
-  ^{::type ::nested}
+  ^:qualia
   (fn [state updates context queue-update]
     (let [updated-entities
           (into {} (map (fn [[key entity]]

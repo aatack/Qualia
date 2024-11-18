@@ -2,7 +2,7 @@
 
 (defn q-entity [builder]
   (fn [& arguments]
-    ^{::type ::entity}
+    ^:qualia
     (fn [state updates context queue-update]
       (let [arguments-changed? (not= (or arguments ()) (:arguments state))
             has-updates? (> (count updates) 0)

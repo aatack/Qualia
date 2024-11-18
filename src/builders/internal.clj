@@ -18,7 +18,7 @@
     (function path key (partial f x y))))
 
 (defn q-internal [initial builder]
-  ^{::type ::internal}
+  ^:qualia
   (fn [state updates context queue-update]
     (let [internal (reduce (fn [values [key functions]]
                              (update values key (apply comp (reverse functions))))

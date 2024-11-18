@@ -1,9 +1,12 @@
 (ns builders.literal)
 
 (defn q-literal [value]
-  ^{::type ::literal}
+  ^:qualia
   (fn [state _ _ _]
     (-> state (assoc :value value) (dissoc :contextual) (dissoc :nested))))
+
+(defn wrap-literal [value]
+  (if (-> value meta :qualia) value (q-literal value)))
 
 (comment
   (require '[helpers :refer [void-update]])
