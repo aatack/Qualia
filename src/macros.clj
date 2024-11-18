@@ -45,18 +45,22 @@
 
 (defmacro let-nested [bindings & body]
   (let [nested (gensym "nested")
-  
+
         inbound-bindings
         (->> bindings
              (partition 2)
              (map (fn [[key value]] [(keyword key) value]))
              (into {}))
-  
+
         outbound-bindings
         (->> inbound-bindings
              (mapcat (fn [[key _]] [(symbol key) `(~key ~nested)]))
              (into []))]
-  
+
     `(~q-nested ~inbound-bindings
-                  (fn [~nested]
-                    (let ~outbound-bindings ~@body)))))
+                (fn [~nested]
+                  (let ~outbound-bindings ~@body)))))
+
+(defn map-nested [function items]
+  (q-nested (->> items (map function) (into {}))
+            (comp q-literal identity)))
