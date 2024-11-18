@@ -1,9 +1,8 @@
 (ns macros
   (:require
+   [builders.contextual :refer [q-consume]]
    [builders.entity :refer [q-entity]]
-   [builders.internal :refer [q-internal]]
-   [builders.literal :refer [q-literal]]
-   [helpers :refer [void-update]]))
+   [builders.internal :refer [q-internal]]))
 
 (defmacro defentity [name args & body]
   `(def ~name (~q-entity (fn ~args ~@body))))
@@ -25,3 +24,11 @@
     `(~q-internal ~inbound-bindings
                   (fn [~internals]
                     (let ~outbound-bindings ~@body)))))
+
+(defmacro let-context [keys & body]
+  (let [consumed (gensym "consumed")
+        inbound-bindings (into [] (map keyword keys))
+        outbound-bindings (->> inbound-bindings
+                               (mapcat (fn [key] [(symbol key) `(~key ~consumed)]))
+                               (into []))]
+    `(~q-consume ~inbound-bindings (fn [~consumed] (let ~outbound-bindings ~@body)))))

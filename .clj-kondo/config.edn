@@ -1,2 +1,3 @@
 {:lint-as {macros/defentity clojure.core/defn
-           macros/let-internal clojure.core/let}}
+           macros/let-internal clojure.core/let
+           macros/let-context clojure.core/fn}}
