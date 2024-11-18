@@ -1,8 +1,10 @@
 (ns macros
   (:require
-   [builders.contextual :refer [q-consume]]
+   [builders.contextual :refer [q-consume q-provide]]
    [builders.entity :refer [q-entity]]
-   [builders.internal :refer [q-internal]]))
+   [builders.internal :refer [q-internal]]
+   [builders.literal :refer [q-literal]]
+   [builders.nested :refer [q-nested]]))
 
 (defmacro defentity [name args & body]
   `(def ~name (~q-entity (fn ~args ~@body))))
@@ -32,3 +34,29 @@
                                (mapcat (fn [key] [(symbol key) `(~key ~consumed)]))
                                (into []))]
     `(~q-consume ~inbound-bindings (fn [~consumed] (let ~outbound-bindings ~@body)))))
+
+(defmacro def-context [bindings body]
+  (list q-provide
+        (->> bindings
+             (partition 2)
+             (map (fn [[key value]] [(keyword key) value]))
+             (into {}))
+        body))
+
+(defmacro let-nested [bindings & body]
+  (let [nested (gensym "nested")
+  
+        inbound-bindings
+        (->> bindings
+             (partition 2)
+             (map (fn [[key value]] [(keyword key) value]))
+             (into {}))
+  
+        outbound-bindings
+        (->> inbound-bindings
+             (mapcat (fn [[key _]] [(symbol key) `(~key ~nested)]))
+             (into []))]
+  
+    `(~q-nested ~inbound-bindings
+                  (fn [~nested]
+                    (let ~outbound-bindings ~@body)))))
