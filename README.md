@@ -1,7 +1,7 @@
 # Qualia
 
-A proof-of-concept system for describing data that should be derived from internal state, then running updates to that internal state and propagating any required changes throughout.
-Broadly this works in a similar way to React, except it can be used for any arbitrary data structure rather than being tied explicitly to the DOM.
+A proof-of-concept system for computing data from stored state, then running updates to that state and propagating any required changes throughout.
+Broadly this works in a similar way to React, except it can be used for any arbitrary data structure rather than being tied to the DOM.
 
 ## Example
 
@@ -42,7 +42,7 @@ Broadly this works in a similar way to React, except it can be used for any arbi
 ## Tests
 
 For some reason, the test runner wasn't playing well with VSCode.
-For this reason, the tests have been left in comments at the bottom of each file, and need to be run manually.
+The tests have therefore been left in comments at the bottom of each file, and need to be run manually.
 
 ## Performance
 
