@@ -14,7 +14,7 @@ Broadly this works in a similar way to React, except it can be used for any arbi
     (let-context [font]
       [:on-click
        (fn [] (swap! count inc))
-       [:text (str name ": " @count) font]])))
+       [:text (str name ": " @count) {:font font}]])))
 
 (defentity counters []
   (def-context [font "arial"]
@@ -26,8 +26,8 @@ Broadly this works in a similar way to React, except it can be used for any arbi
 
 @runner
 ;; [:row
-;;  [:on-click #function[...] [:text "Left: 0" "arial"]]
-;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
+;;  [:on-click #function[...] [:text "Left: 0" {:font "arial"}]]
+;;  [:on-click #function[...] [:text "Right: 0" {:font "arial"}]]]
 
 ;; Access and call the increment function for the left counter.  The right counter's
 ;; value will not be recomputed
@@ -35,8 +35,8 @@ Broadly this works in a similar way to React, except it can be used for any arbi
 
 @runner
 ;; [:row
-;;  [:on-click #function[...] [:text "Left: 1" "arial"]]
-;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
+;;  [:on-click #function[...] [:text "Left: 1" {:font "arial"}]]
+;;  [:on-click #function[...] [:text "Right: 0" {:font "arial"}]]]
 ```
 
 ## Tests
