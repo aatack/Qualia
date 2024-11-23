@@ -11,16 +11,16 @@ Broadly this works in a similar way to React, except it can be used for any arbi
 
 (defentity counter [name]
   (let-internal [count 0]
-                (let-context [font]
-                             [:on-click
-                              (fn [] (swap! count inc))
-                              [:text (str name ": " @count) font]])))
+    (let-context [font]
+      [:on-click
+       (fn [] (swap! count inc))
+       [:text (str name ": " @count) font]])))
 
 (defentity counters []
   (def-context [font "arial"]
     (let-nested [left (counter "Left")
                  right (counter "Right")]
-                [:row left right])))
+      [:row left right])))
 
 (def runner (build-runner (counters)))
 
