@@ -6,39 +6,37 @@ Broadly this works in a similar way to React, except it can be used for any arbi
 ## Example
 
 ```clojure
-(comment
-  (require '[macros :refer [defentity let-internal let-context def-context let-nested]]
-           '[runner :refer [build-runner]])
+(require '[macros :refer [defentity let-internal let-context def-context let-nested]]
+         '[runner :refer [build-runner]])
 
-  (defentity counter [name]
-    (let-internal [count 0]
-                  (let-context [font]
-                               [:on-click
-                                (fn [] (swap! count inc))
-                                [:text (str name ": " @count) font]])))
+(defentity counter [name]
+  (let-internal [count 0]
+                (let-context [font]
+                             [:on-click
+                              (fn [] (swap! count inc))
+                              [:text (str name ": " @count) font]])))
 
-  (defentity counters []
-    (def-context [font "arial"]
-      (let-nested [left (counter "Left")
-                   right (counter "Right")]
-                  [:row left right])))
+(defentity counters []
+  (def-context [font "arial"]
+    (let-nested [left (counter "Left")
+                 right (counter "Right")]
+                [:row left right])))
 
-  (def runner (build-runner (counters)))
+(def runner (build-runner (counters)))
 
-  @runner
-  ;; [:row
-  ;;  [:on-click #function[...] [:text "Left: 0" "arial"]]
-  ;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
+@runner
+;; [:row
+;;  [:on-click #function[...] [:text "Left: 0" "arial"]]
+;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
 
-  ;; Access and call the increment function for the left counter.  The right counter's
-  ;; value will not be recomputed
-  ((get-in @runner [1 1]))
+;; Access and call the increment function for the left counter.  The right counter's
+;; value will not be recomputed
+((get-in @runner [1 1]))
 
-  @runner
-  ;; [:row
-  ;;  [:on-click #function[...] [:text "Left: 1" "arial"]]
-  ;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
-  )
+@runner
+;; [:row
+;;  [:on-click #function[...] [:text "Left: 1" "arial"]]
+;;  [:on-click #function[...] [:text "Right: 0" "arial"]]]
 ```
 
 ## Tests
