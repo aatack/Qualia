@@ -3,16 +3,22 @@
 (defn watch-entity! [key reference old-state new-state]
   (println reference "changed"))
 
-(defn build-entity [function]
+(defn build-entity [function & arguments]
   (let [entity (atom {:function function
-                      :arguments [() ()]
+                      :arguments [() arguments]
                       :entities {}
                       :valid false
                       :value nil
                       :dependencies {}
-                      :dependents #{}})]
+                      :dependents #{}
+                      :renders 0})]
     (add-watch entity :watch watch-entity!)
     entity))
+
+(defn build-state-entity [value]
+  (build-entity (fn [arguments entities]
+                  [(first arguments) entities])
+                value))
 
 (defn evaluate-entity! [entity]
   (let [entity-state @entity]
@@ -31,7 +37,8 @@
                      (-> current
                          (assoc :value value)
                          (assoc :valid true)
-                         (assoc :entities entities)))))
+                         (assoc :entities entities)
+                         (update :renders inc)))))
           (:value @entity))
 
       :else
@@ -42,6 +49,10 @@
 
 (comment
 
-  (def e (build-entity identity))
+  (def e (build-state-entity 1))
+
+  e
+
+  (evaluate-entity! e)
 
   (swap! e assoc :arguments ['(1) '(2)]))
