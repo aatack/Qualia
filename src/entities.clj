@@ -77,7 +77,28 @@
                        (fn [[old-arguments new-arguments]]
                          [old-arguments (list (apply function new-arguments))]))))))
 
+
+(def *derefs* (atom {}))
+
+(defn capture-derefs [form]
+  (with-redefs [*derefs* (atom {})]
+    (let [original-deref deref]
+      (with-redefs [deref
+                    (fn [x]
+                      (let [value (original-deref x)]
+                        (swap! *derefs* assoc x value)
+                        value))]
+        (do
+          (println (eval form))
+          @*derefs*)))))
+
 (comment
+
+  (capture-derefs '(+ @(atom 1)
+                      @(atom 2)
+                      (do (println (capture-derefs '(+ @(atom 5) 2))) 3)))
+
+  (capture-derefs '(count @e))
 
   (def e (build-state-entity 1))
 
