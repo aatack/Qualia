@@ -29,7 +29,8 @@
           (some (fn [[_ [reference value]]] (not= (evaluate-entity! reference) value))
                 (:internal entity-state)))
       (do (let [[value entities]
-                ;; Override `deref` here to track dependencies
+                ;; Override `deref` here to track dependencies.  It should also store
+                ;; the value of the dereferenced entity
                 ((:function entity-state) (-> entity-state :arguments second)
                                           (:entities entity-state))]
             (swap! entity
@@ -38,6 +39,7 @@
                          (assoc :value value)
                          (assoc :valid true)
                          (assoc :entities entities)
+                         (update :arguments (fn [[_ current]] [current current]))
                          (update :renders inc)))))
           (:value @entity))
 
@@ -45,7 +47,14 @@
       (do (swap! entity assoc :valid true)
           (:value @entity)))))
 
-(defn swap-entity! [entity function])
+(defn swap-entity! [entity function]
+  (swap! entity
+         (fn [current]
+           (-> current
+               (assoc :valid false)
+               (update :arguments
+                       (fn [[old-arguments new-arguments]]
+                         [old-arguments (list (apply function new-arguments))]))))))
 
 (comment
 
@@ -54,5 +63,7 @@
   e
 
   (evaluate-entity! e)
+
+  (swap-entity! e dec)
 
   (swap! e assoc :arguments ['(1) '(2)]))
