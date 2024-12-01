@@ -40,42 +40,34 @@
                   [(first arguments) entities])
                 value))
 
-(def original-deref deref)
-
-(defmacro capture-derefs [& body]
-  `(let [derefs# (atom {})]
-     (with-redefs [deref (fn [x#]
-                           (swap! derefs# assoc x# (original-deref x#))
-                           (original-deref x#))]
-       (let [result# ~@body]
-         [result# (original-deref derefs#)]))))
-
 (defn evaluate-entity! [entity]
-  (let [entity-state @entity]
-    (cond
-      (:valid entity-state) (:value entity-state)
+  (let [entity-state @entity
+        value
+        (if (:valid entity-state)
+          (:value entity-state)
+          (do
+            (if (or (apply not= (:arguments entity-state))
+                    (some (fn [[_ [reference value]]]
+                            (not= (evaluate-entity! reference) value))
+                          (:depdendencies entity-state)))
+              (let [[value entities]
+                    ((:function entity-state)
+                     (-> entity-state :arguments second)
+                     (:entities entity-state))]
+                (swap! entity
+                       (fn [current]
+                         (-> current
+                             (update :arguments (fn [[_ current]] [current current]))
+                             (assoc :entities entities)
+                             (assoc :valid true)
+                             (assoc :value value)
+                             (assoc :dependencies {})
+                             (update :renders inc)))))
+              (swap! entity assoc :valid true))
+            (:value @entity)))]
 
-      (or (apply not= (:arguments entity-state))
-          (some (fn [[_ [reference value]]] (not= (evaluate-entity! reference) value))
-                (:internal entity-state)))
-      (do (let [[[value entities] dependencies]
-                (capture-derefs
-                 ((:function entity-state) (-> entity-state :arguments second)
-                                           (:entities entity-state)))]
-            (swap! entity
-                   (fn [current]
-                     (-> current
-                         (update :arguments (fn [[_ current]] [current current]))
-                         (assoc :entities entities)
-                         (assoc :valid true)
-                         (assoc :value value)
-                         (assoc :dependencies dependencies)
-                         (update :renders inc)))))
-          (:value @entity))
-
-      :else
-      (do (swap! entity assoc :valid true)
-          (:value @entity)))))
+    ;; Save the value
+    value))
 
 (defn swap-entity! [entity function]
   (swap! entity
