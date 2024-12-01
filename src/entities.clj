@@ -40,6 +40,18 @@
                   [(first arguments) entities])
                 value))
 
+(defn- recompute-entity! [entity]
+  (let [[value entities]
+        ((:function @entity) (-> @entity :arguments second) (:entities @entity))]
+    (swap! entity (fn [current]
+                    (-> current
+                        (update :arguments (fn [[_ current]] [current current]))
+                        (assoc :entities entities)
+                        (assoc :valid true)
+                        (assoc :value value)
+                        (assoc :dependencies {})
+                        (update :renders inc))))))
+
 (defn evaluate-entity! [entity]
   (let [entity-state @entity
         value
@@ -50,19 +62,7 @@
                     (some (fn [[_ [reference value]]]
                             (not= (evaluate-entity! reference) value))
                           (:depdendencies entity-state)))
-              (let [[value entities]
-                    ((:function entity-state)
-                     (-> entity-state :arguments second)
-                     (:entities entity-state))]
-                (swap! entity
-                       (fn [current]
-                         (-> current
-                             (update :arguments (fn [[_ current]] [current current]))
-                             (assoc :entities entities)
-                             (assoc :valid true)
-                             (assoc :value value)
-                             (assoc :dependencies {})
-                             (update :renders inc)))))
+              (recompute-entity! entity)
               (swap! entity assoc :valid true))
             (:value @entity)))]
 
