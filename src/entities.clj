@@ -40,6 +40,16 @@
                   [(first arguments) entities])
                 value))
 
+(def original-deref deref)
+
+(defmacro capture-derefs [& body]
+  `(let [derefs# (atom {})]
+     (with-redefs [deref (fn [x#]
+                           (swap! derefs# assoc x# (original-deref x#))
+                           (original-deref x#))]
+       (let [result# ~@body]
+         [result# (original-deref derefs#)]))))
+
 (defn evaluate-entity! [entity]
   (let [entity-state @entity]
     (cond
@@ -48,11 +58,10 @@
       (or (apply not= (:arguments entity-state))
           (some (fn [[_ [reference value]]] (not= (evaluate-entity! reference) value))
                 (:internal entity-state)))
-      (do (let [[value entities]
-                ;; Override `deref` here to track dependencies.  It should also store
-                ;; the value of the dereferenced entity
-                ((:function entity-state) (-> entity-state :arguments second)
-                                          (:entities entity-state))]
+      (do (let [[[value entities] dependencies]
+                (capture-derefs
+                 ((:function entity-state) (-> entity-state :arguments second)
+                                           (:entities entity-state)))]
             (swap! entity
                    (fn [current]
                      (-> current
@@ -60,7 +69,7 @@
                          (assoc :entities entities)
                          (assoc :valid true)
                          (assoc :value value)
-                         ;; Update dependencies here
+                         (assoc :dependencies dependencies)
                          (update :renders inc)))))
           (:value @entity))
 
@@ -76,18 +85,6 @@
                (update :arguments
                        (fn [[old-arguments new-arguments]]
                          [old-arguments (list (apply function new-arguments))]))))))
-
-(def original-deref deref)
-
-(defmacro capture-derefs [& body]
-  `(let [derefs# (atom {})]
-     (with-redefs [deref (fn [x#]
-                           (swap! derefs# assoc x# (original-deref x#))
-                           (original-deref x#))]
-       (let [result# ~@body]
-         [result# (original-deref derefs#)])
-       #_(let [result# ~body]
-           [result# (original-deref derefs#)]))))
 
 (comment
   (macroexpand
