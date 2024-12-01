@@ -36,10 +36,11 @@
             (swap! entity
                    (fn [current]
                      (-> current
-                         (assoc :value value)
-                         (assoc :valid true)
-                         (assoc :entities entities)
                          (update :arguments (fn [[_ current]] [current current]))
+                         (assoc :entities entities)
+                         (assoc :valid true)
+                         (assoc :value value)
+                         ;; Update dependencies here
                          (update :renders inc)))))
           (:value @entity))
 
