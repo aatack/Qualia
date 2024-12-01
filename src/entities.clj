@@ -1,7 +1,11 @@
 (ns entities)
 
 (defn watch-entity! [key reference old-state new-state]
-  (println reference "changed"))
+  ;; When the validity transitions from true to false, invalidate all dependents of this
+  ;; entity
+  (when (and (:valid old-state) (not (:valid new-state))) 
+    (doseq [dependent (:dependents new-state)]
+      (swap! dependent assoc :valid false))))
 
 (defn build-entity [function & arguments]
   (let [entity (atom {:function function
