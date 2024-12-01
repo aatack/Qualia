@@ -77,26 +77,26 @@
                        (fn [[old-arguments new-arguments]]
                          [old-arguments (list (apply function new-arguments))]))))))
 
+(def original-deref deref)
 
-(def *derefs* (atom {}))
-
-(defn capture-derefs [form]
-  (with-redefs [*derefs* (atom {})]
-    (let [original-deref deref]
-      (with-redefs [deref
-                    (fn [x]
-                      (let [value (original-deref x)]
-                        (swap! *derefs* assoc x value)
-                        value))]
-        (do
-          (println (eval form))
-          @*derefs*)))))
+(defmacro capture-derefs [& body]
+  `(let [derefs# (atom {})]
+     (with-redefs [deref (fn [x#]
+                           (swap! derefs# assoc x# (original-deref x#))
+                           (original-deref x#))]
+       (let [result# ~@body]
+         [result# (original-deref derefs#)])
+       #_(let [result# ~body]
+           [result# (original-deref derefs#)]))))
 
 (comment
+  (macroexpand
+   '(capture-derefs @a))
 
-  (capture-derefs '(+ @(atom 1)
-                      @(atom 2)
-                      (do (println (capture-derefs '(+ @(atom 5) 2))) 3)))
+  (let [a (atom 1)
+        b (atom 2)
+        c (atom 3)]
+    (capture-derefs (+ @a @b (first (capture-derefs (+ @b @c))))))
 
   (capture-derefs '(count @e))
 
