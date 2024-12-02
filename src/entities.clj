@@ -91,13 +91,13 @@
   (do (swap-entity! a inc) nil)
 
   (def e (build-entity (fn [arguments entities]
-                         [(apply +
+                         [(> 100 (apply +
                                  (evaluate-entity! a true)
                                  (evaluate-entity! b true)
-                                 arguments)
+                                 arguments))
                           entities])))
   (def f (build-entity (fn [arguments entities]
-                         [(* (evaluate-entity! e true) (evaluate-entity! e true))
+                         [(if (evaluate-entity! e true) :yes :no)
                           entities])))
 
   (-> @a (update :dependents count) (update :dependencies count))
