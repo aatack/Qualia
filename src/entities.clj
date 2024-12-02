@@ -96,11 +96,14 @@
                                  (evaluate-entity! b true)
                                  arguments)
                           entities])))
+  (def f (build-entity (fn [arguments entities]
+                         [(* (evaluate-entity! e true) (evaluate-entity! e true))
+                          entities])))
 
-  (-> @b (update :dependents count) (update :dependencies count))
-  (-> @e (update :dependents count) (update :dependencies count))
+  (-> @a (update :dependents count) (update :dependencies count))
+  (-> @f (update :dependents count) (update :dependencies count))
 
-  (evaluate-entity! e false)
+  (evaluate-entity! f false)
 
   (do (swap! e (fn [ee] (-> ee
                             (assoc :arguments [nil '(5 6)])
