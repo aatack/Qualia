@@ -40,19 +40,23 @@
                   [(first arguments) entities])
                 value))
 
+(def tracked-dependencies (atom {}))
+
 (defn- recompute-entity! [entity]
-  (let [[value entities]
-        ((:function @entity) (-> @entity :arguments second) (:entities @entity))]
+  (let [local-tracked-dependencies (atom {})
+        [value entities]
+        (with-redefs [tracked-dependencies local-tracked-dependencies]
+          ((:function @entity) (-> @entity :arguments second) (:entities @entity)))]
     (swap! entity (fn [current]
                     (-> current
                         (update :arguments (fn [[_ current]] [current current]))
                         (assoc :entities entities)
                         (assoc :valid true)
                         (assoc :value value)
-                        (assoc :dependencies {})
+                        (assoc :dependencies @local-tracked-dependencies)
                         (update :renders inc))))))
 
-(defn evaluate-entity! [entity]
+(defn evaluate-entity! [entity track-dependencies?]
   (let [entity-state @entity
         value
         (if (:valid entity-state)
@@ -60,13 +64,14 @@
           (do
             (if (or (apply not= (:arguments entity-state))
                     (some (fn [[_ [reference value]]]
-                            (not= (evaluate-entity! reference) value))
+                            (not= (evaluate-entity! reference false) value))
                           (:depdendencies entity-state)))
               (recompute-entity! entity)
               (swap! entity assoc :valid true))
             (:value @entity)))]
 
-    ;; Save the value
+    (when track-dependencies?
+      (swap! tracked-dependencies assoc entity value))
     value))
 
 (defn swap-entity! [entity function]
@@ -84,7 +89,7 @@
 
   e
 
-  (evaluate-entity! e)
+  (evaluate-entity! e false)
 
   (swap-entity! e dec)
 
