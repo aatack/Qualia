@@ -79,15 +79,6 @@
                          [old-arguments (list (apply function new-arguments))]))))))
 
 (comment
-  (macroexpand
-   '(capture-derefs @a))
-
-  (let [a (atom 1)
-        b (atom 2)
-        c (atom 3)]
-    (capture-derefs (+ @a @b (first (capture-derefs (+ @b @c))))))
-
-  (capture-derefs '(count @e))
 
   (def e (build-state-entity 1))
 
