@@ -63,9 +63,9 @@
           (:value entity-state)
           (do
             (if (or (apply not= (:arguments entity-state))
-                    (some (fn [[_ [reference value]]]
+                    (some (fn [[reference value]]
                             (not= (evaluate-entity! reference false) value))
-                          (:depdendencies entity-state)))
+                          (:dependencies entity-state)))
               (recompute-entity! entity)
               (swap! entity assoc :valid true))
             (:value @entity)))]
@@ -88,7 +88,7 @@
   (def a (build-state-entity 1))
   (def b (build-state-entity 2))
 
-  (swap-entity! a inc)
+  (do (swap-entity! a inc) nil)
 
   (def e (build-entity (fn [arguments entities]
                          [(apply +
@@ -97,11 +97,11 @@
                                  arguments)
                           entities])))
 
-  a
-  e
+  (-> @b (update :dependents count) (update :dependencies count))
+  (-> @e (update :dependents count) (update :dependencies count))
 
   (evaluate-entity! e false)
 
-  (swap-entity! e dec)
-
-  (swap! e assoc :arguments ['(1) '(2)]))
+  (do (swap! e (fn [ee] (-> ee
+                            (assoc :arguments [nil '(5 6)])
+                            (assoc :valid false)))) nil))
