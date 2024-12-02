@@ -8,7 +8,7 @@
       (swap! dependent assoc :valid false)))
 
   (let [old-dependencies (-> old-state :dependencies keys set)
-        new-dependencies (-> old-state :dependencies keys set)
+        new-dependencies (-> new-state :dependencies keys set)
 
         removed-dependencies (reduce disj old-dependencies new-dependencies)
         added-dependencies (reduce disj new-dependencies old-dependencies)]
@@ -85,8 +85,19 @@
 
 (comment
 
-  (def e (build-state-entity 1))
+  (def a (build-state-entity 1))
+  (def b (build-state-entity 2))
 
+  (swap-entity! a inc)
+
+  (def e (build-entity (fn [arguments entities]
+                         [(apply +
+                                 (evaluate-entity! a true)
+                                 (evaluate-entity! b true)
+                                 arguments)
+                          entities])))
+
+  a
   e
 
   (evaluate-entity! e false)
