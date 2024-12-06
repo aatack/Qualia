@@ -1,5 +1,37 @@
 (ns entities)
 
+(def ^:dynamic *entity-context* nil)
+
+(defn dependencies-changed?
+  "Determine whether the dependencies or arguments in the state have actually changed.
+   
+   Sometimes, one of the dependencies will become invalid, but its value will not
+   actually have changed.  Therefore it's not actually necessary to recompute the value
+   of dependent entities."
+  [state]
+  ;; When evaluating the dependencies just to check if they've changed, there's no need
+  ;; to track dereferenced entities
+  (with-redefs [*entity-context* nil]
+    (or (apply not= (:arguments state))
+        (some (fn [[entity value]] (not= @entity value))
+              (:dependencies state)))))
+
+(defrecord Entity [function state]
+  clojure.lang.IDeref
+  (deref [this]
+    (let [value nil]
+
+      ;; If there's currently a context in effect, this value is being referenced by an
+      ;; entity, and it needs to be added to the list of dependencies (along with the
+      ;; value it took at the time of the evaluation)
+      (when *entity-context*
+        (swap! *entity-context* update :dependencies assoc this value))
+
+      value)))
+
+(comment
+  @(Entity. first (atom {})))
+
 (defn watch-entity! [_ entity old-state new-state]
   ;; When the validity transitions from true to false, invalidate all dependents of this
   ;; entity
@@ -92,9 +124,9 @@
 
   (def e (build-entity (fn [arguments entities]
                          [(> 100 (apply +
-                                 (evaluate-entity! a true)
-                                 (evaluate-entity! b true)
-                                 arguments))
+                                        (evaluate-entity! a true)
+                                        (evaluate-entity! b true)
+                                        arguments))
                           entities])))
   (def f (build-entity (fn [arguments entities]
                          [(if (evaluate-entity! e true) :yes :no)
