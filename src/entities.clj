@@ -2,7 +2,7 @@
 
 (def ^:dynamic *entity-context* nil)
 
-(defn dependencies-changed?
+(defn- dependencies-changed?
   "Determine whether the dependencies or arguments in the state have actually changed.
    
    Sometimes, one of the dependencies will become invalid, but its value will not
@@ -16,10 +16,27 @@
         (some (fn [[entity value]] (not= @entity value))
               (:dependencies state)))))
 
+(defn- recompute-entity!
+  "Recompute the value in the entity, updating its state, and return the result."
+  [entity]
+  (let [context (atom {:dependencies {} :cache {}})]
+    (with-redefs [*entity-context* context]
+      ;; Evaluate the function
+      ;; Set the result
+      ;; Set validity
+      ;; Update the arguments
+      ;; Update the dependencies
+      ;; Update the dependents
+      ;; Update the cache
+      ;; Return the value
+      )))
+
 (defrecord Entity [function state]
   clojure.lang.IDeref
   (deref [this]
-    (let [value nil]
+    (let [value (cond (:valid @state) (:value @state)
+                      (dependencies-changed? @state) (recompute-entity! this)
+                      :else (do (swap! state assoc :valid true) (:value @state)))]
 
       ;; If there's currently a context in effect, this value is being referenced by an
       ;; entity, and it needs to be added to the list of dependencies (along with the
