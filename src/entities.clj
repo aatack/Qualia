@@ -21,7 +21,7 @@
   [entity]
   (let [context (atom {:dependencies {} :cache {}})]
     (with-redefs [*entity-context* context]
-      (let [arguments (-> entity :state :arguments second)
+      (let [arguments (-> @(:state entity) :arguments second)
             value (apply (:function entity) arguments)]
 
         (swap! (:state entity)
@@ -52,7 +52,11 @@
       value)))
 
 (comment
-  @(Entity. first (atom {})))
+  (def e (Entity. identity (atom {:arguments [nil '(1)]})))
+
+  @(:state e)
+
+  @e)
 
 (defn watch-entity! [_ entity old-state new-state]
   ;; When the validity transitions from true to false, invalidate all dependents of this
@@ -96,19 +100,19 @@
 
 (def tracked-dependencies (atom {}))
 
-(defn- recompute-entity! [entity]
-  (let [local-tracked-dependencies (atom {})
-        [value entities]
-        (with-redefs [tracked-dependencies local-tracked-dependencies]
-          ((:function @entity) (-> @entity :arguments second) (:entities @entity)))]
-    (swap! entity (fn [current]
-                    (-> current
-                        (update :arguments (fn [[_ current]] [current current]))
-                        (assoc :entities entities)
-                        (assoc :valid true)
-                        (assoc :value value)
-                        (assoc :dependencies @local-tracked-dependencies)
-                        (update :renders inc))))))
+#_(defn- recompute-entity! [entity]
+    (let [local-tracked-dependencies (atom {})
+          [value entities]
+          (with-redefs [tracked-dependencies local-tracked-dependencies]
+            ((:function @entity) (-> @entity :arguments second) (:entities @entity)))]
+      (swap! entity (fn [current]
+                      (-> current
+                          (update :arguments (fn [[_ current]] [current current]))
+                          (assoc :entities entities)
+                          (assoc :valid true)
+                          (assoc :value value)
+                          (assoc :dependencies @local-tracked-dependencies)
+                          (update :renders inc))))))
 
 (defn evaluate-entity! [entity track-dependencies?]
   (let [entity-state @entity
