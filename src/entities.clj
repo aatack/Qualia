@@ -21,15 +21,20 @@
   [entity]
   (let [context (atom {:dependencies {} :cache {}})]
     (with-redefs [*entity-context* context]
-      ;; Evaluate the function
-      ;; Set the result
-      ;; Set validity
-      ;; Update the arguments
-      ;; Update the dependencies
-      ;; Update the dependents
-      ;; Update the cache
-      ;; Return the value
-      )))
+      (let [arguments (-> entity :state :arguments second)
+            value (apply (:function entity) arguments)]
+
+        (swap! (:state entity)
+               (fn [current]
+                 (-> current
+                     (assoc :value value)
+                     (assoc :valid true)
+                     (assoc :arguments [arguments arguments])
+                     (assoc :dependencies (:dependencies @context))
+                     (assoc :cache (:cache @context))
+                     (update :renders #(inc (or % 0))))))
+
+        value))))
 
 (defrecord Entity [function state]
   clojure.lang.IDeref
