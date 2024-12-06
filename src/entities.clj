@@ -67,12 +67,12 @@
     ;; If any dependencies are no longer dependencies, remove this entity from their
     ;; list of dependents
     (doseq [dependency removed-dependencies]
-      (swap! dependency update :dependents disj entity))
+      (swap! (:state dependency) update :dependents disj entity))
 
     ;; If any new dependencies have appeared, add this entity to their list of
     ;; dependents
     (doseq [dependency added-dependencies]
-      (swap! dependency update :dependents conj entity))))
+      (swap! (:state dependency) update :dependents conj entity))))
 
 (defn ->entity [function & arguments]
   (let [state (atom {:arguments [nil arguments]})]
@@ -88,11 +88,17 @@
       (update :dependencies count)))
 
 (comment
-  (def e (->state 1))
+  (def a (->state 1))
+  (def b (->state 2))
+  (def c (->state 3))
 
-  (printentity e)
+  (def e (->entity (fn [x y z] (+ @x @y @z)) a b c))
 
-  @e)
+  (printentity c)
+
+  @e
+
+  (->> @(:state e) :cache keys))
 
 (defn watch-entity! [_ entity old-state new-state]
   ;; When the validity transitions from true to false, invalidate all dependents of this
