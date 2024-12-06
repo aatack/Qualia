@@ -36,6 +36,15 @@
 
         value))))
 
+(defn reset-arguments! [entity & new-arguments]
+  (swap! (:state entity)
+         (fn [current]
+           (-> current
+               (assoc :valid false)
+               (update :arguments
+                       (fn [[old-arguments _]]
+                         [old-arguments new-arguments]))))))
+
 (defrecord Entity [function state]
   clojure.lang.IDeref
   (deref [this]
@@ -86,15 +95,6 @@
   (-> @(:state entity)
       (update :dependents count)
       (update :dependencies count)))
-
-(defn reset-arguments! [entity & new-arguments]
-  (swap! (:state entity)
-         (fn [current]
-           (-> current
-               (assoc :valid false)
-               (update :arguments
-                       (fn [[old-arguments _]]
-                         [old-arguments new-arguments]))))))
 
 (comment
   (def a (->state 1))
