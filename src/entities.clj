@@ -74,10 +74,23 @@
     (doseq [dependency added-dependencies]
       (swap! dependency update :dependents conj entity))))
 
-(comment
-  (def e (Entity. identity (atom {:arguments [nil '(1)]})))
+(defn ->entity [function & arguments]
+  (let [state (atom {:arguments [nil arguments]})]
+    (add-watch state :watch watch-state)
+    (Entity. function state)))
 
-  @(:state e)
+(defn ->state [value]
+  (->entity identity value))
+
+(defn printentity [entity]
+  (-> @(:state entity)
+      (update :dependents count)
+      (update :dependencies count)))
+
+(comment
+  (def e (->state 1))
+
+  (printentity e)
 
   @e)
 
