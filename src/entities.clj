@@ -45,7 +45,8 @@
                (assoc :valid false)
                (update :arguments
                        (fn [[old-arguments _]]
-                         [old-arguments new-arguments]))))))
+                         [old-arguments new-arguments])))))
+  entity)
 
 (defrecord Entity [function state]
   clojure.lang.IDeref
@@ -108,6 +109,12 @@
       (swap! context update :cache assoc key (->state default)))
     ((:cache @context) key)))
 
+(defn- get-entity [key function & arguments]
+  (let [context (or *entity-context* (default-context))]
+    (when (not (contains? (:cache @context) key))
+      (swap! context update :cache assoc key (apply ->entity function arguments)))
+    (let [entity ((:cache @context) key)]
+      (apply reset-arguments! entity arguments))))
 
 (comment
   (def a (->state 1))
