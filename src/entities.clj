@@ -61,7 +61,11 @@
       (when *entity-context*
         (swap! *entity-context* update :dependencies assoc this value))
 
-      value)))
+      value))
+
+  clojure.lang.IFn
+  (invoke [& arguments]
+    (reset-arguments! (Entity. function state) arguments)))
 
 (defn- watch-state [_ entity old-state new-state]
   ;; When the validity transitions from true to false, invalidate all dependents of this
