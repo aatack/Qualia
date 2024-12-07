@@ -3,4 +3,6 @@
            macros/let-context clojure.core/fn
            macros/def-context clojure.core/let
            macros/let-nested clojure.core/let
-           entities/defentity clojure.core/defn}}
+           entities/defentity clojure.core/defn}
+ :config-in-call
+ {entities/test-entity {:exclude [:type-mismatch]}}}

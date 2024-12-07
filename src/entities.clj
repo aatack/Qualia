@@ -102,7 +102,8 @@
 
 (defentity test-entity [a b] '(+ a b))
 
-@(test-entity 1 2) ;; Actually returns an Entity
+@#_{:clj-kondo/ignore [:type-mismatch]}
+ (test-entity 1 2)
 
 
 (comment
