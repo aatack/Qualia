@@ -96,6 +96,15 @@
       (update :dependents count)
       (update :dependencies count)))
 
+(defmacro defentity [name arguments & body]
+  `(let [function# (fn ~arguments ~@body)]
+     (defn ~name [& arguments#] (apply ->entity function# arguments#))))
+
+(defentity test-entity [a b] '(+ a b))
+
+@(test-entity 1 2) ;; Actually returns an Entity
+
+
 (comment
   (def a (->state 1))
   (def b (->state 2))
