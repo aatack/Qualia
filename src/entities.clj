@@ -16,10 +16,12 @@
         (some (fn [[entity value]] (not= @entity value))
               (:dependencies state)))))
 
+(defn- default-context [] (atom {:dependencies {} :cache {}}))
+
 (defn- recompute-entity!
   "Recompute the value in the entity, updating its state, and return the result."
   [entity]
-  (let [context (atom {:dependencies {} :cache {}})]
+  (let [context (default-context)]
     (with-redefs [*entity-context* context]
       (let [arguments (-> @(:state entity) :arguments second)
             value (apply (:function entity) arguments)]
@@ -100,10 +102,11 @@
   `(let [function# (fn ~arguments ~@body)]
      (defn ~name [& arguments#] (apply ->entity function# arguments#))))
 
-(defentity test-entity [a b] '(+ a b))
-
-@#_{:clj-kondo/ignore [:type-mismatch]}
- (test-entity 1 2)
+(defn get-state [key default]
+  (let [context (or *entity-context* (default-context))]
+    (when (not (contains? (:cache @context) key))
+      (swap! context update :cache assoc key (->state default)))
+    ((:cache @context) key)))
 
 
 (comment
