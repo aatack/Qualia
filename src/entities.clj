@@ -108,43 +108,61 @@
 
 (defmacro defentity [name arguments & body]
   `(let [function# (fn ~arguments ~@body)]
-     (defn ~name [& arguments#] (apply ->entity function# arguments#))))
+     (def ~name (with-meta (fn [& arguments#] (apply ->entity function# arguments#))
+                  {:entity true}))))
 
-(defn get-state [key default]
+(defn- get-state [key default]
   (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
       (swap! context update :cache assoc key (->state default)))
     ((:cache @context) key)))
 
 (defmacro let-state [bindings & body]
-  (let [bindings (->> bindings
-                      (partition 2)
-                      (mapcat (fn [[key default]]
-                                [key (list get-state (keyword key) default)]))
-                      (into []))]
-    `(let ~bindings ~@body)))
+  (let [mapped-bindings (->> bindings
+                             (partition 2)
+                             (mapcat (fn [[key default]]
+                                       [key (list get-state (keyword key) default)]))
+                             (into []))]
+    `(let ~mapped-bindings ~@body)))
 
 (comment
-  (defentity ex []
-    (let-state [x 1
-                y 2]
-               {:total (+ @x @y) :inc (fn [] (x (inc @x)))}))
+  (defentity counter [name]
+    (let-state [total 0]
+               {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
 
-  (def ex- (ex))
+  (defentity counter-group []
+    (let-entity [a (counter "A")
+                 b (counter "B")]
+                {:text (str (:text @a) ", " (:text @b))
+                 :counters [@a @b]}))
 
-  @ex-
+  (def g (counter-group))
 
-  (def f (:inc @ex-))
-  (do (f) nil)
+  @g
 
-  (:renders @(:state ex-)))
+  (do ((get-in @g [:counters 0 :inc])) nil)
+
+  (:renders @(:state g)))
 
 (defn- get-entity [key function & arguments]
   (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
-      (swap! context update :cache assoc key (apply ->entity function arguments)))
+      (swap! context update :cache assoc key
+             ;; If the function is not an entity already, it needs to be wrapped
+             (if (:entity (meta function))
+               (apply function arguments)
+               (apply ->entity function arguments))))
     (let [entity ((:cache @context) key)]
       (apply reset-arguments! entity arguments))))
+
+(defmacro let-entity [bindings & body]
+  (let [mapped-bindings
+        (->> bindings
+             (partition 2)
+             (mapcat (fn [[key expression]]
+                       [key (list apply get-entity (keyword key) (into [] expression))]))
+             (into []))]
+    `(let ~mapped-bindings ~@body)))
 
 (comment
   (def a (->state 1))
