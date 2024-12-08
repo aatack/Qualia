@@ -132,8 +132,9 @@
 
   (defentity counter-group []
     (let-entity [a (counter "A")
-                 b (counter "B")]
-                {:text (str (:text @a) ", " (:text @b))
+                 b (counter "B")
+                 c (+ 1 2)]
+                {:text (str (:text @a) ", " (:text @b) ", " @c)
                  :counters [@a @b]}))
 
   (def g (counter-group))
