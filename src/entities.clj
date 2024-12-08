@@ -42,13 +42,14 @@
         value))))
 
 (defn reset-arguments! [entity & new-arguments]
-  (swap! (:state entity)
-         (fn [current]
-           (-> current
-               (assoc :valid false)
-               (update :arguments
-                       (fn [[old-arguments _]]
-                         [old-arguments new-arguments])))))
+  (when (not= new-arguments (-> entity :state deref :arguments second))
+    (swap! (:state entity)
+           (fn [current]
+             (-> current
+                 (assoc :valid false)
+                 (update :arguments
+                         (fn [[old-arguments _]]
+                           [old-arguments new-arguments]))))))
   entity)
 
 (defrecord Entity [function state]
