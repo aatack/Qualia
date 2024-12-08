@@ -113,6 +113,14 @@
       (swap! context update :cache assoc key (->state default)))
     ((:cache @context) key)))
 
+(defmacro let-state [bindings & body]
+  (let [bindings (->> bindings
+                      (partition 2)
+                      (mapcat (fn [[key default]]
+                                [key (list get-state (keyword key) default)]))
+                      (into []))]
+    `(let ~bindings ~@body)))
+
 (defn- get-entity [key function & arguments]
   (let [context (or *entity-context* (default-context))]
     (when (not (contains? (:cache @context) key))
