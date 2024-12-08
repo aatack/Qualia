@@ -17,14 +17,16 @@
         (some (fn [[entity value]] (not= @entity value))
               (:dependencies state)))))
 
-(defn- default-context [] (atom {:dependencies {} :cache {}}))
+(defn- build-context [dependencies cache]
+  (atom {:dependencies (or dependencies {}) :cache (or cache {})}))
 
 (defn- recompute-entity!
   "Recompute the value in the entity, updating its state, and return the result."
   [entity]
-  (let [context (default-context)]
+  (let [state @(:state entity)
+        context (build-context (:dependencies state) (:cache state))]
     (with-redefs [*entity-context* context]
-      (let [arguments (-> @(:state entity) :arguments second)
+      (let [arguments (-> state :arguments second)
             value (apply (:function entity) arguments)]
 
         (swap! (:state entity)
@@ -109,7 +111,7 @@
      (defn ~name [& arguments#] (apply ->entity function# arguments#))))
 
 (defn get-state [key default]
-  (let [context (or *entity-context* (default-context))]
+  (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
       (swap! context update :cache assoc key (->state default)))
     ((:cache @context) key)))
@@ -126,16 +128,19 @@
   (defentity ex []
     (let-state [x 1
                 y 2]
-               (+ @x @y)))
+               {:total (+ @x @y) :inc (fn [] (x (inc @x)))}))
 
   (def ex- (ex))
 
   @ex-
-  (:renders @(:state ex-))
-  )
+
+  (def f (:inc @ex-))
+  (do (f) nil)
+
+  (:renders @(:state ex-)))
 
 (defn- get-entity [key function & arguments]
-  (let [context (or *entity-context* (default-context))]
+  (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
       (swap! context update :cache assoc key (apply ->entity function arguments)))
     (let [entity ((:cache @context) key)]
