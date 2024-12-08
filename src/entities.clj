@@ -146,9 +146,17 @@
              (into []))]
     `(let ~mapped-bindings ~@body)))
 
+(defentity on-change [value function]
+  (let-state [previous-value nil]
+    (when (not= value (with-redefs [*entity-context* nil] @previous-value))
+      (previous-value value)
+      (function))))
+
 (comment
   (defentity counter [name]
     (let-state [total 0]
+      (let-entity [oc (on-change @total (fn [] (println name " incremented")))]
+        @oc)
       {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
 
   (defentity counter-group []
@@ -162,6 +170,6 @@
 
   @g
 
-  (do ((get-in @g [:counters 0 :inc])) nil)
+  (do ((get-in @g [:counters 0 :inc])) @g)
 
   (:renders @(:state g)))
