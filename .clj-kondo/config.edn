@@ -4,4 +4,5 @@
            macros/def-context clojure.core/let
            macros/let-nested clojure.core/let
            entities/defentity clojure.core/defn
-           entities/let-state clojure.core/let}}
+           entities/let-state clojure.core/let
+           entities/let-entity clojure.core/let}}

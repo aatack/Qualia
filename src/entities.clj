@@ -126,26 +126,6 @@
                              (into []))]
     `(let ~mapped-bindings ~@body)))
 
-(comment
-  (defentity counter [name]
-    (let-state [total 0]
-      {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
-
-  (defentity counter-group []
-    (let-entity [a (counter "A")
-                 b (counter "B")
-                 c (+ 1 2)]
-      {:text (str (:text @a) ", " (:text @b) ", " @c)
-       :counters [@a @b]}))
-
-  (def g (counter-group))
-
-  @g
-
-  (do ((get-in @g [:counters 0 :inc])) nil)
-
-  (:renders @(:state g)))
-
 (defn- get-entity [key function & arguments]
   (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
@@ -167,18 +147,21 @@
     `(let ~mapped-bindings ~@body)))
 
 (comment
-  (def a (->state 1))
-  (def b (->state 2))
-  (def c (->state 3))
+  (defentity counter [name]
+    (let-state [total 0]
+      {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
 
-  (reset-arguments! e a c c)
-  (reset-arguments! a 5)
+  (defentity counter-group []
+    (let-entity [a (counter "A")
+                 b (counter "B")
+                 c (+ 1 2)]
+      {:text (str (:text @a) ", " (:text @b) ", " @c)
+       :counters [@a @b]}))
 
-  (def e (->entity (fn [x y z] (+ @x @y @z)) a b c))
+  (def g (counter-group))
 
-  (printentity a)
+  @g
 
-  @e
-  (:renders @(:state e))
+  (do ((get-in @g [:counters 0 :inc])) nil)
 
-  (->> @(:state e) :cache keys))
+  (:renders @(:state g)))
