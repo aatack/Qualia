@@ -12,7 +12,8 @@
   ;; When evaluating the dependencies just to check if they've changed, there's no need
   ;; to track dereferenced entities
   (with-redefs [*entity-context* nil]
-    (or (apply not= (:arguments state))
+    (or (not (contains? state :value))
+        (apply not= (:arguments state))
         (some (fn [[entity value]] (not= @entity value))
               (:dependencies state)))))
 
@@ -120,6 +121,18 @@
                                 [key (list get-state (keyword key) default)]))
                       (into []))]
     `(let ~bindings ~@body)))
+
+(comment
+  (defentity ex []
+    (let-state [x 1
+                y 2]
+               (+ @x @y)))
+
+  (def ex- (ex))
+
+  @ex-
+  (:renders @(:state ex-))
+  )
 
 (defn- get-entity [key function & arguments]
   (let [context (or *entity-context* (default-context))]
