@@ -129,14 +129,14 @@
 (comment
   (defentity counter [name]
     (let-state [total 0]
-               {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
+      {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
 
   (defentity counter-group []
     (let-entity [a (counter "A")
                  b (counter "B")
                  c (+ 1 2)]
-                {:text (str (:text @a) ", " (:text @b) ", " @c)
-                 :counters [@a @b]}))
+      {:text (str (:text @a) ", " (:text @b) ", " @c)
+       :counters [@a @b]}))
 
   (def g (counter-group))
 
