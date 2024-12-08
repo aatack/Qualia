@@ -152,11 +152,14 @@
       (previous-value value)
       (function))))
 
+(defmacro when-change [key test & body]
+  `(let-entity [~(symbol key) (on-change ~test (fn [] ~@body))] (deref ~(symbol key))))
+
 (comment
   (defentity counter [name]
     (let-state [total 0]
-      (let-entity [oc (on-change @total (fn [] (println name " incremented")))]
-        @oc)
+      (when-change :total-change @total
+        (println name " incremented"))
       {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
 
   (defentity counter-group []
