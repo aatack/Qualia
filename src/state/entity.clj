@@ -2,7 +2,7 @@
 
 (def ^:dynamic *entity-context* nil)
 
-(defn- build-entity-context [dependencies cache]
+(defn build-entity-context [dependencies cache]
   (atom {:dependencies (or dependencies {}) :cache (or cache {})}))
 
 (defn- dependencies-changed?
@@ -28,7 +28,6 @@
     (with-redefs [*entity-context* context]
       (let [arguments (-> state :arguments second)
             value (apply (:function entity) arguments)]
-
         (swap! (:state entity)
                (fn [current]
                  (-> current
@@ -38,7 +37,6 @@
                      (assoc :dependencies (:dependencies @context))
                      (assoc :cache (:cache @context))
                      (update :renders #(inc (or % 0))))))
-
         value))))
 
 (defn reset-arguments! [entity & new-arguments]
@@ -58,13 +56,11 @@
     (let [value (cond (:valid @state) (:value @state)
                       (dependencies-changed? @state) (recompute-entity! this)
                       :else (do (swap! state assoc :valid true) (:value @state)))]
-
       ;; If there's currently a context in effect, this value is being referenced by an
       ;; entity, and it needs to be added to the list of dependencies (along with the
       ;; value it took at the time of the evaluation)
       (when *entity-context*
         (swap! *entity-context* update :dependencies assoc this value))
-
       value))
 
   clojure.lang.IFn
