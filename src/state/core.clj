@@ -6,7 +6,7 @@
 (defmacro defentity [name arguments & body]
   `(let [function# (fn ~arguments ~@body)]
      (def ~name (with-meta (fn [& arguments#]
-                             (apply state.watch/watch-entity function# arguments#))
+                             (apply #'watch-entity function# arguments#))
                   {:entity true}))))
 
 (defn- use-cached-state [key default]
@@ -20,7 +20,7 @@
         (->> bindings
              (partition 2)
              (mapcat (fn [[key default]]
-                       [key (list state.core/use-cached-state (keyword key) default)]))
+                       [key (list use-cached-state (keyword key) default)]))
              (into []))]
     `(let ~mapped-bindings ~@body)))
 
@@ -54,4 +54,5 @@
       (with-redefs [*entity-context* nil] (function)))))
 
 (defmacro when-changed [key test & body]
-  `(let-entity [~(symbol key) (on-change ~test (fn [] ~@body))] (deref ~(symbol key))))
+  `(let-entity [~(symbol key) (#'on-change ~test (fn [] ~@body))]
+     (deref ~(symbol key))))
