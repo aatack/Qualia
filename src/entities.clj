@@ -150,7 +150,7 @@
   (let-state [previous-value nil]
     (when (not= value (with-redefs [*entity-context* nil] @previous-value))
       (previous-value value)
-      (function))))
+      (with-redefs [*entity-context* nil] (function)))))
 
 (defmacro when-change [key test & body]
   `(let-entity [~(symbol key) (on-change ~test (fn [] ~@body))] (deref ~(symbol key))))
