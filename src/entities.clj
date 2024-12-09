@@ -99,14 +99,6 @@
     (add-watch state :watch watch-state)
     (Entity. function state)))
 
-(defn ->state [value]
-  (->entity identity value))
-
-(defn printentity [entity]
-  (-> @(:state entity)
-      (update :dependents count)
-      (update :dependencies count)))
-
 (defmacro defentity [name arguments & body]
   `(let [function# (fn ~arguments ~@body)]
      (def ~name (with-meta (fn [& arguments#] (apply ->entity function# arguments#))
@@ -115,7 +107,7 @@
 (defn- get-state [key default]
   (let [context (or *entity-context* (build-context nil nil))]
     (when (not (contains? (:cache @context) key))
-      (swap! context update :cache assoc key (->state default)))
+      (swap! context update :cache assoc key (->entity identity default)))
     ((:cache @context) key)))
 
 (defmacro let-state [bindings & body]
@@ -154,25 +146,3 @@
 
 (defmacro when-change [key test & body]
   `(let-entity [~(symbol key) (on-change ~test (fn [] ~@body))] (deref ~(symbol key))))
-
-(comment
-  (defentity counter [name]
-    (let-state [total 0]
-      (when-change :total-change @total
-        (println name " incremented"))
-      {:text (str name ": " @total) :inc (fn [] (total (inc @total)))}))
-
-  (defentity counter-group []
-    (let-entity [a (counter "A")
-                 b (counter "B")
-                 c (+ 1 2)]
-      {:text (str (:text @a) ", " (:text @b) ", " @c)
-       :counters [@a @b]}))
-
-  (def g (counter-group))
-
-  @g
-
-  (do ((get-in @g [:counters 0 :inc])) @g)
-
-  (:renders @(:state g)))
