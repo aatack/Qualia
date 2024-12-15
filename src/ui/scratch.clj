@@ -6,18 +6,8 @@
 (s/defentity debug-entity [bounds mouse buttons keys]
   (let [[x y] @mouse
         in-bounds (< x 100)]
-
-    (state.core/let-entity
-     [inb (state.core/on-change (< x 100) (fn [] (println "Changed")))]
-      @inb)
-
-    #_(s/when-changed :in-bounds in-bounds
-                      (println "In bounds? " in-bounds))
-
-    #_(s/let-entity
-       [in-bounds (s/on-change in-bounds (clojure.core/fn [] (println "In bounds? " in-bounds)))]
-        @in-bounds)
-
+    (s/when-changed :in-bounds in-bounds
+                    (println "In bounds? " in-bounds))
     (str x " " y " " in-bounds)))
 
 (defn start! [entity title [width height]]
