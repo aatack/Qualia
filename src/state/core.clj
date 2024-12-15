@@ -54,8 +54,5 @@
       (with-redefs [*entity-context* nil] (function)))))
 
 (defmacro when-changed [key test & body]
-  `(state.core/let-entity [~(symbol key) (state.core/on-change ~test (fn [] ~@body))]
+  `(let-entity [~(symbol key) (state.core/on-change ~test (fn [] ~@body))]
      (deref ~(symbol key))))
-
-(macroexpand '(when-changed :in-bounds in-bounds
-                            (println "In bounds? " in-bounds)))
