@@ -27,9 +27,11 @@
                 (q/no-stroke)
                 (q/text (str @app) 0 0))
 
-              (key-pressed [])
+              (key-pressed []
+                (keys (conj @keys (q/key-as-keyword))))
 
-              (key-released [])
+              (key-released []
+                (keys (disj @keys (q/key-as-keyword))))
 
               (mouse-pressed [])
 
